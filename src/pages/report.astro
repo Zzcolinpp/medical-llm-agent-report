@@ -1,0 +1,34 @@
+---
+import { Search } from 'lucide-astro';
+import Layout from '../layouts/Layout.astro';
+import { report } from '../lib/report';
+
+const base = import.meta.env.BASE_URL;
+const tocSections = report.sections.filter((section) => section.title !== '一图速览：文献分布');
+---
+
+<Layout title="报告全文 · 医学 LLM / Agent 文献追踪" active="report">
+  <div class="container report-shell">
+    <div class="report-tools">
+      <span class="eyebrow">FULL REPORT · {report.meta.retrievalDate}</span>
+      <a class="button button--secondary button--small" href={`${base}literature/`}>
+        <Search size={15} strokeWidth={1.8} aria-hidden="true" />
+        <span>检索这份报告</span>
+      </a>
+    </div>
+    <div class="report-layout">
+      <aside class="report-toc" aria-label="报告目录">
+        <div class="toc-title">目录</div>
+        <nav>
+          {tocSections.map((section) => (
+            <a class:list={['toc-link', { 'toc-link--category': section.isCategory }]} href={`#${section.id}`}>
+              <span>{section.title}</span>
+              {section.count && <strong>{section.count}</strong>}
+            </a>
+          ))}
+        </nav>
+      </aside>
+      <article class="report-document" set:html={report.html}></article>
+    </div>
+  </div>
+</Layout>

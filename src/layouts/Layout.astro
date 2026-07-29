@@ -1,0 +1,78 @@
+---
+import { ArrowUpRight, BookOpen, Search } from 'lucide-astro';
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description?: string;
+  active?: 'home' | 'report' | 'literature';
+}
+
+const {
+  title,
+  description = '面向医学大语言模型、生成式 AI 与智能体研究的结构化文献追踪报告。',
+  active = 'home'
+} = Astro.props;
+const base = import.meta.env.BASE_URL;
+const reportHref = `${base}report/`;
+const literatureHref = `${base}literature/`;
+const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site).toString() : undefined;
+---
+
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="theme-color" content="#f3f5f2" />
+    <meta name="site-base" content={base} />
+    <meta name="description" content={description} />
+    {canonical && <link rel="canonical" href={canonical} />}
+    <title>{title}</title>
+  </head>
+  <body data-base={base}>
+    <a class="skip-link" href="#main-content">跳到主要内容</a>
+    <header class="site-header">
+      <div class="site-header__inner">
+        <a class="brand" href={base} aria-label="医学 LLM 与 Agent 文献追踪首页">
+          <span class="brand__mark">npj</span>
+          <span class="brand__text">DIGITAL MEDICINE<br /><small>LLM / AGENT TRACKER</small></span>
+        </a>
+        <nav class="site-nav" aria-label="主导航">
+          <a class:list={['nav-link', { active: active === 'home' }]} href={base}>
+            <span>总览</span>
+          </a>
+          <a class:list={['nav-link', { active: active === 'report' }]} href={reportHref}>
+            <BookOpen size={16} strokeWidth={1.8} aria-hidden="true" />
+            <span>报告阅读</span>
+          </a>
+          <a class:list={['nav-link', { active: active === 'literature' }]} href={literatureHref}>
+            <Search size={16} strokeWidth={1.8} aria-hidden="true" />
+            <span>文献检索</span>
+          </a>
+        </nav>
+        <a class="header-link" href={reportHref}>
+          <span>进入报告</span>
+          <ArrowUpRight size={15} strokeWidth={1.8} aria-hidden="true" />
+        </a>
+      </div>
+    </header>
+
+    <main id="main-content">
+      <slot />
+    </main>
+
+    <footer class="site-footer">
+      <div class="site-footer__inner">
+        <div>
+          <strong>医学 LLM / Agent 文献追踪报告</strong>
+          <p>研究信息整理，不构成医疗建议。论文详情请以原始出版物为准。</p>
+        </div>
+        <div class="site-footer__meta">
+          <span>数据源：PubMed / NCBI E-utilities / Crossref</span>
+          <span>检索截止：2026-07-14</span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

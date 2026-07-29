@@ -1,0 +1,211 @@
+---
+import { ArrowUpRight, Filter, RotateCcw, Search } from 'lucide-astro';
+import type { Category, Paper } from '../lib/report';
+
+interface Props {
+  papers: Paper[];
+  categories: Category[];
+  base: string;
+}
+
+const { papers, categories, base } = Astro.props;
+const scopeLabel = (scope: Paper['scope']) => scope === 'edge' ? '边缘相关' : scope === 'sister' ? '姊妹刊' : '核心相关';
+const years = [...new Set(papers.map((paper) => paper.date.slice(0, 4)).filter(Boolean))].sort().reverse();
+const articleTypes = [...new Set(papers.map((paper) => paper.articleType).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'zh-CN'));
+const searchText = (paper: Paper) => [paper.titleZh, paper.titleEn, paper.summary, paper.takeaway, paper.journal, paper.category, paper.articleType].join(' ');
+---
+
+<div class="explorer" data-explorer data-report-path={`${base}report/`}>
+  <div class="explorer-controls">
+    <label class="search-field">
+      <Search size={18} strokeWidth={1.8} aria-hidden="true" />
+      <span class="sr-only">搜索文献</span>
+      <input id="paper-query" type="search" placeholder="搜索中文标题、英文标题、摘要或要点" autocomplete="off" />
+    </label>
+    <label class="select-field">
+      <span>主题</span>
+      <select id="paper-category">
+        <option value="">全部主题</option>
+        {categories.map((category) => <option value={category.id}>{category.title}</option>)}
+      </select>
+    </label>
+    <label class="select-field">
+      <span>范围</span>
+      <select id="paper-scope">
+        <option value="">全部范围</option>
+        <option value="core">核心相关</option>
+        <option value="edge">边缘相关</option>
+        <option value="sister">姊妹刊</option>
+      </select>
+    </label>
+    <label class="select-field">
+      <span>年份</span>
+      <select id="paper-year">
+        <option value="">全部年份</option>
+        {years.map((year) => <option value={year}>{year}</option>)}
+      </select>
+    </label>
+    <label class="select-field select-field--wide">
+      <span>类型</span>
+      <select id="paper-type">
+        <option value="">全部类型</option>
+        {articleTypes.map((type) => <option value={type}>{type}</option>)}
+      </select>
+    </label>
+    <label class="select-field">
+      <span>排序</span>
+      <select id="paper-sort">
+        <option value="date">最新优先</option>
+        <option value="oldest">最早优先</option>
+        <option value="title">标题顺序</option>
+      </select>
+    </label>
+    <button class="icon-button" id="clear-filters" type="button" title="清除筛选" aria-label="清除筛选">
+      <RotateCcw size={17} strokeWidth={1.8} aria-hidden="true" />
+    </button>
+  </div>
+
+  <div class="explorer-status">
+    <div class="explorer-status__count" id="results-count" aria-live="polite">显示 {papers.length} / {papers.length} 篇</div>
+    <div class="explorer-status__legend">
+      <span><i class="legend-dot legend-dot--core"></i>核心相关</span>
+      <span><i class="legend-dot legend-dot--edge"></i>边缘相关</span>
+      <span><i class="legend-dot legend-dot--sister"></i>姊妹刊</span>
+    </div>
+  </div>
+
+  <div class="search-results" id="paper-results">
+    {papers.map((paper) => (
+      <article
+        class="paper-card paper-result"
+        data-paper-card
+        data-search={searchText(paper)}
+        data-category={paper.categoryId}
+        data-scope={paper.scope}
+        data-year={paper.date.slice(0, 4)}
+        data-type={paper.articleType}
+        data-date={paper.date}
+        data-title={paper.titleZh}
+      >
+        <div class="paper-card__topline">
+          <span class:list={['scope-badge', `scope-badge--${paper.scope}`]}>{scopeLabel(paper.scope)}</span>
+          <span>{paper.date}</span>
+          <span>{paper.category}</span>
+          <span>{paper.articleType}</span>
+        </div>
+        <h2><a href={`${base}report/#${paper.slug}`}>{paper.titleZh}</a></h2>
+        <p class="paper-card__english">{paper.titleEn}</p>
+        <p class="paper-card__summary">{paper.summary}</p>
+        <p class="paper-card__takeaway"><strong>要点</strong>{paper.takeaway}</p>
+        <div class="paper-card__bottomline">
+          <span>{paper.journal}</span>
+          {paper.pmidUrl && <a href={paper.pmidUrl}>PMID {paper.pmid} <ArrowUpRight size={13} strokeWidth={1.8} aria-hidden="true" /></a>}
+          {paper.doiUrl && <a href={paper.doiUrl}>DOI <ArrowUpRight size={13} strokeWidth={1.8} aria-hidden="true" /></a>}
+        </div>
+      </article>
+    ))}
+  </div>
+  <div class="empty-state" id="empty-state" hidden>
+    <Filter size={22} strokeWidth={1.6} aria-hidden="true" />
+    <strong>没有匹配的文献</strong>
+    <span>请调整关键词或筛选条件。</span>
+  </div>
+</div>
+
+<script>
+  type FilterState = {
+    q: string;
+    category: string;
+    scope: string;
+    year: string;
+    type: string;
+    sort: string;
+  };
+
+  const explorer = document.querySelector<HTMLElement>('[data-explorer]');
+  if (explorer) {
+    const cards = [...explorer.querySelectorAll<HTMLElement>('[data-paper-card]')];
+    const queryInput = explorer.querySelector<HTMLInputElement>('#paper-query');
+    const categorySelect = explorer.querySelector<HTMLSelectElement>('#paper-category');
+    const scopeSelect = explorer.querySelector<HTMLSelectElement>('#paper-scope');
+    const yearSelect = explorer.querySelector<HTMLSelectElement>('#paper-year');
+    const typeSelect = explorer.querySelector<HTMLSelectElement>('#paper-type');
+    const sortSelect = explorer.querySelector<HTMLSelectElement>('#paper-sort');
+    const clearButton = explorer.querySelector<HTMLButtonElement>('#clear-filters');
+    const resultCount = explorer.querySelector<HTMLElement>('#results-count');
+    const emptyState = explorer.querySelector<HTMLElement>('#empty-state');
+
+    const normalize = (value: string) => value.toLocaleLowerCase().replace(/\s+/g, '');
+    const stateFromUrl = (): FilterState => {
+      const params = new URLSearchParams(window.location.search);
+      return {
+        q: params.get('q') || '',
+        category: params.get('category') || '',
+        scope: params.get('scope') || '',
+        year: params.get('year') || '',
+        type: params.get('type') || '',
+        sort: params.get('sort') || 'date'
+      };
+    };
+    const setControls = (state: FilterState) => {
+      if (queryInput) queryInput.value = state.q;
+      if (categorySelect) categorySelect.value = state.category;
+      if (scopeSelect) scopeSelect.value = state.scope;
+      if (yearSelect) yearSelect.value = state.year;
+      if (typeSelect) typeSelect.value = state.type;
+      if (sortSelect) sortSelect.value = state.sort;
+    };
+    const getState = (): FilterState => ({
+      q: queryInput?.value || '',
+      category: categorySelect?.value || '',
+      scope: scopeSelect?.value || '',
+      year: yearSelect?.value || '',
+      type: typeSelect?.value || '',
+      sort: sortSelect?.value || 'date'
+    });
+    const updateUrl = (state: FilterState) => {
+      const params = new URLSearchParams();
+      for (const [key, value] of Object.entries(state)) {
+        if (value && !(key === 'sort' && value === 'date')) params.set(key, value);
+      }
+      const next = params.toString() ? `${window.location.pathname}?${params.toString()}` : window.location.pathname;
+      window.history.replaceState(null, '', next);
+    };
+    const sortCards = (sort: string) => {
+      const sorted = [...cards].sort((a, b) => {
+        if (sort === 'title') return (a.dataset.title || '').localeCompare(b.dataset.title || '', 'zh-CN');
+        const direction = sort === 'oldest' ? 1 : -1;
+        return ((a.dataset.date || '').localeCompare(b.dataset.date || '')) * direction;
+      });
+      const fragment = document.createDocumentFragment();
+      sorted.forEach((card) => fragment.appendChild(card));
+      explorer.querySelector('#paper-results')?.appendChild(fragment);
+    };
+    const render = () => {
+      const state = getState();
+      const query = normalize(state.q);
+      sortCards(state.sort || 'date');
+      let visible = 0;
+      for (const card of cards) {
+        const matches = (!query || normalize(card.dataset.search || '').includes(query))
+          && (!state.category || card.dataset.category === state.category)
+          && (!state.scope || card.dataset.scope === state.scope)
+          && (!state.year || card.dataset.year === state.year)
+          && (!state.type || card.dataset.type === state.type);
+        card.hidden = !matches;
+        if (matches) visible += 1;
+      }
+      if (resultCount) resultCount.textContent = `显示 ${visible} / ${cards.length} 篇`;
+      if (emptyState) emptyState.hidden = visible !== 0;
+      updateUrl(state);
+    };
+    setControls(stateFromUrl());
+    [queryInput, categorySelect, scopeSelect, yearSelect, typeSelect, sortSelect]
+      .forEach((control) => control?.addEventListener('input', render));
+    clearButton?.addEventListener('click', () => {
+      setControls({ q: '', category: '', scope: '', year: '', type: '', sort: 'date' });
+      render();
+    });
+    render();
+  }
+</script>
