@@ -36,6 +36,7 @@ export interface Paper {
   pmidUrl?: string;
   doi?: string;
   doiUrl?: string;
+  sourceUrl?: string;
   summary: string;
   takeaway: string;
   category: string;
@@ -147,6 +148,9 @@ function headingText(node: MdNode): string {
 }
 
 function parseCategory(title: string): Omit<Category, 'id'> | null {
+  if (title.startsWith('附录')) {
+    return null;
+  }
   const countMatch = title.match(/(\d+)\s*篇\s*）\s*$/u);
   if (!countMatch) {
     return null;
@@ -267,12 +271,13 @@ function parsePaper(
     pmidUrl,
     doi,
     doiUrl,
+    sourceUrl: links[0],
     summary,
     takeaway,
     category: context.categoryTitle,
     categoryId: context.categoryId,
     scope: context.scope,
-    indexed: !/PubMed 未索引/i.test(metaText),
+    indexed: !/PubMed 未索引|预印本/i.test(metaText),
     isAppendix: context.isAppendix
   };
 }

@@ -1,0 +1,18 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import LiteratureExplorer from '../../components/LiteratureExplorer.astro';
+import { surgeryReport } from '../../lib/surgery-report';
+
+const base = import.meta.env.BASE_URL;
+const reportPath = `${base}surgery/report/`;
+const scopeCounts = {
+  core: surgeryReport.papers.filter((paper) => paper.scope === 'core').length,
+  edge: surgeryReport.papers.filter((paper) => paper.scope === 'edge').length,
+  preprint: surgeryReport.papers.filter((paper) => /arXiv|medRxiv|bioRxiv/i.test(paper.journal)).length
+};
+---
+
+<Layout title="文献检索 · 手术 + AI" description="按主题、范围、类型和年份检索手术与人工智能交叉研究文献。" active="surgery-literature" reportLabel="手术 + AI 专题文献追踪报告" reportDate={surgeryReport.meta.retrievalDate} brandKicker="SURGERY + AI" brandSubline="OPERATIVE AI TRACKER">
+  <section class="page-intro-band"><div class="container page-intro"><div><p class="eyebrow">SURGERY + AI INDEX · {surgeryReport.papers.length} UNIQUE RECORDS</p><h1>文献检索</h1><p>在期刊论文与预印本的唯一索引中按主题、范围、文章类型和年份定位研究，再返回报告原文的上下文。</p></div><div class="page-intro__stats"><span><strong>{scopeCounts.core}</strong>核心</span><span><strong>{scopeCounts.edge}</strong>边缘</span><span><strong>{scopeCounts.preprint}</strong>预印本</span></div></div></section>
+  <section class="section-band section-band--compact"><div class="container"><LiteratureExplorer papers={surgeryReport.papers} categories={surgeryReport.categories} base={base} reportPath={reportPath} /></div></section>
+</Layout>

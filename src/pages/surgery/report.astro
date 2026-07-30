@@ -1,0 +1,19 @@
+---
+import { Search } from 'lucide-astro';
+import Layout from '../../layouts/Layout.astro';
+import { surgeryReport } from '../../lib/surgery-report';
+
+const base = import.meta.env.BASE_URL;
+const reportPath = `${base}surgery/report/`;
+const tocSections = surgeryReport.sections.filter((section) => section.title !== '一图速览：文献分布');
+---
+
+<Layout title="报告全文 · 手术 + AI 文献追踪" description="多期刊手术与人工智能交叉研究文献追踪报告全文。" active="surgery-report" reportLabel="手术 + AI 专题文献追踪报告" reportDate={surgeryReport.meta.retrievalDate} brandKicker="SURGERY + AI" brandSubline="OPERATIVE AI TRACKER">
+  <div class="container report-shell">
+    <div class="report-tools"><span class="eyebrow">FULL REPORT · {surgeryReport.meta.retrievalDate} · {surgeryReport.papers.length} RECORDS</span><a class="button button--secondary button--small" href={`${base}surgery/literature/`}><Search size={15} strokeWidth={1.8} aria-hidden="true" /><span>检索这份报告</span></a></div>
+    <div class="report-layout">
+      <aside class="report-toc" aria-label="报告目录"><div class="toc-title">目录</div><nav>{tocSections.map((section) => <a class:list={['toc-link', { 'toc-link--category': section.isCategory }]} href={`${reportPath}#${section.id}`}><span>{section.title}</span>{section.count && <strong>{section.count}</strong>}</a>)}</nav></aside>
+      <article class="report-document" set:html={surgeryReport.html}></article>
+    </div>
+  </div>
+</Layout>

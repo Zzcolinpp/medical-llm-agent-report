@@ -1,6 +1,6 @@
 # 医学 LLM / Agent 文献追踪报告
 
-这是一个由 Markdown 驱动的 Astro 静态网站，面向医学 AI 研究者阅读 npj Digital Medicine 文献追踪报告。
+这是一个由 Markdown 驱动的 Astro 静态网站，面向医学 AI 研究者阅读多套专题文献追踪报告。
 
 ## 本地运行
 
@@ -40,4 +40,18 @@ pnpm build
 
 ```bash
 pnpm validate:vlm
+```
+
+## 手术 + AI 专题报告
+
+手术、外科、围手术期与人工智能交叉研究独立发布在：
+
+- `/surgery/`：专题总览
+- `/surgery/report/`：报告全文
+- `/surgery/literature/`：结构化文献检索
+
+该专题包含 1323 篇唯一文献，其中期刊论文 782 篇、预印本 541 篇。附录完整清单只保留在全文中，不会重复进入检索索引。校验该报告时执行：
+
+```bash
+pnpm validate:surgery
 ```

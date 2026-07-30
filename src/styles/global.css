@@ -986,6 +986,7 @@ input {
   margin: 8px 0;
   padding-left: 4px;
   line-height: 1.8;
+  overflow-wrap: anywhere;
 }
 
 .report-document blockquote {
@@ -1028,6 +1029,7 @@ input {
   border: 1px solid var(--line);
   text-align: left;
   vertical-align: top;
+  overflow-wrap: anywhere;
 }
 
 .report-document th {

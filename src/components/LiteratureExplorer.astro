@@ -98,11 +98,12 @@ const searchText = (paper: Paper) => [paper.titleZh, paper.titleEn, paper.summar
         <p class="paper-card__english">{paper.titleEn}</p>
         <p class="paper-card__summary">{paper.summary}</p>
         <p class="paper-card__takeaway"><strong>要点</strong>{paper.takeaway}</p>
-        <div class="paper-card__bottomline">
-          <span>{paper.journal}</span>
-          {paper.pmidUrl && <a href={paper.pmidUrl}>PMID {paper.pmid} <ArrowUpRight size={13} strokeWidth={1.8} aria-hidden="true" /></a>}
-          {paper.doiUrl && <a href={paper.doiUrl}>DOI <ArrowUpRight size={13} strokeWidth={1.8} aria-hidden="true" /></a>}
-        </div>
+          <div class="paper-card__bottomline">
+            <span>{paper.journal}</span>
+            {paper.pmidUrl && <a href={paper.pmidUrl}>PMID {paper.pmid} <ArrowUpRight size={13} strokeWidth={1.8} aria-hidden="true" /></a>}
+            {paper.doiUrl && <a href={paper.doiUrl}>DOI <ArrowUpRight size={13} strokeWidth={1.8} aria-hidden="true" /></a>}
+            {paper.sourceUrl && !paper.pmidUrl && !paper.doiUrl && <a href={paper.sourceUrl}>原文 <ArrowUpRight size={13} strokeWidth={1.8} aria-hidden="true" /></a>}
+          </div>
       </article>
     ))}
   </div>
