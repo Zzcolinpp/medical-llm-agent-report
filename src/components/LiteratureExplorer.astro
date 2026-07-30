@@ -6,16 +6,17 @@ interface Props {
   papers: Paper[];
   categories: Category[];
   base: string;
+  reportPath?: string;
 }
 
-const { papers, categories, base } = Astro.props;
+const { papers, categories, base, reportPath = `${base}report/` } = Astro.props;
 const scopeLabel = (scope: Paper['scope']) => scope === 'edge' ? '边缘相关' : scope === 'sister' ? '姊妹刊' : '核心相关';
 const years = [...new Set(papers.map((paper) => paper.date.slice(0, 4)).filter(Boolean))].sort().reverse();
 const articleTypes = [...new Set(papers.map((paper) => paper.articleType).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'zh-CN'));
 const searchText = (paper: Paper) => [paper.titleZh, paper.titleEn, paper.summary, paper.takeaway, paper.journal, paper.category, paper.articleType].join(' ');
 ---
 
-<div class="explorer" data-explorer data-report-path={`${base}report/`}>
+<div class="explorer" data-explorer data-report-path={reportPath}>
   <div class="explorer-controls">
     <label class="search-field">
       <Search size={18} strokeWidth={1.8} aria-hidden="true" />
@@ -93,7 +94,7 @@ const searchText = (paper: Paper) => [paper.titleZh, paper.titleEn, paper.summar
           <span>{paper.category}</span>
           <span>{paper.articleType}</span>
         </div>
-        <h2><a href={`${base}report/#${paper.slug}`}>{paper.titleZh}</a></h2>
+        <h2><a href={`${reportPath}#${paper.slug}`}>{paper.titleZh}</a></h2>
         <p class="paper-card__english">{paper.titleEn}</p>
         <p class="paper-card__summary">{paper.summary}</p>
         <p class="paper-card__takeaway"><strong>要点</strong>{paper.takeaway}</p>

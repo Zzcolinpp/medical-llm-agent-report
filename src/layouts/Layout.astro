@@ -5,17 +5,33 @@ import '../styles/global.css';
 interface Props {
   title: string;
   description?: string;
-  active?: 'home' | 'report' | 'literature';
+  active?: 'home' | 'report' | 'literature' | 'vlm' | 'vlm-report' | 'vlm-literature';
+  reportLabel?: string;
+  reportDate?: string;
+  brandKicker?: string;
+  brandSubline?: string;
 }
 
 const {
   title,
   description = '面向医学大语言模型、生成式 AI 与智能体研究的结构化文献追踪报告。',
-  active = 'home'
+  active = 'home',
+  reportLabel = '医学 LLM / Agent 文献追踪报告',
+  reportDate = '2026-07-14',
+  brandKicker = 'DIGITAL MEDICINE',
+  brandSubline = 'LLM / AGENT TRACKER'
 } = Astro.props;
 const base = import.meta.env.BASE_URL;
 const reportHref = `${base}report/`;
 const literatureHref = `${base}literature/`;
+const vlmHref = `${base}vlm/`;
+const vlmReportHref = `${base}vlm/report/`;
+const primaryReportHref = active === 'vlm' || active === 'vlm-report' || active === 'vlm-literature'
+  ? vlmReportHref
+  : reportHref;
+const primaryReportLabel = active === 'vlm' || active === 'vlm-report' || active === 'vlm-literature'
+  ? '进入 VLM 报告'
+  : '进入报告';
 const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site).toString() : undefined;
 ---
 
@@ -34,9 +50,9 @@ const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site).toString(
     <a class="skip-link" href="#main-content">跳到主要内容</a>
     <header class="site-header">
       <div class="site-header__inner">
-        <a class="brand" href={base} aria-label="医学 LLM 与 Agent 文献追踪首页">
+        <a class="brand" href={base} aria-label="医学人工智能文献追踪首页">
           <span class="brand__mark">npj</span>
-          <span class="brand__text">DIGITAL MEDICINE<br /><small>LLM / AGENT TRACKER</small></span>
+          <span class="brand__text">{brandKicker}<br /><small>{brandSubline}</small></span>
         </a>
         <nav class="site-nav" aria-label="主导航">
           <a class:list={['nav-link', { active: active === 'home' }]} href={base}>
@@ -50,9 +66,13 @@ const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site).toString(
             <Search size={16} strokeWidth={1.8} aria-hidden="true" />
             <span>文献检索</span>
           </a>
+          <a class:list={['nav-link', 'nav-link--vlm', { active: active === 'vlm' || active === 'vlm-report' || active === 'vlm-literature' }]} href={vlmHref}>
+            <span class="nav-label--wide">VLM / 扩散</span>
+            <span class="nav-label--short" aria-hidden="true">VLM</span>
+          </a>
         </nav>
-        <a class="header-link" href={reportHref}>
-          <span>进入报告</span>
+        <a class="header-link" href={primaryReportHref}>
+          <span>{primaryReportLabel}</span>
           <ArrowUpRight size={15} strokeWidth={1.8} aria-hidden="true" />
         </a>
       </div>
@@ -65,12 +85,12 @@ const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site).toString(
     <footer class="site-footer">
       <div class="site-footer__inner">
         <div>
-          <strong>医学 LLM / Agent 文献追踪报告</strong>
+          <strong>{reportLabel}</strong>
           <p>研究信息整理，不构成医疗建议。论文详情请以原始出版物为准。</p>
         </div>
         <div class="site-footer__meta">
           <span>数据源：PubMed / NCBI E-utilities / Crossref</span>
-          <span>检索截止：2026-07-14</span>
+          <span>检索截止：{reportDate}</span>
         </div>
       </div>
     </footer>

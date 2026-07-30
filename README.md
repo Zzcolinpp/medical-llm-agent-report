@@ -27,3 +27,17 @@ pnpm build
 ```
 
 导入脚本会在写入 `src/content/report.md` 前校验主题和文献数量，原始 Obsidian 笔记不会被修改。
+
+## VLM / 扩散专题报告
+
+深度学习、视觉语言模型、扩散与生成式模型专题报告独立发布在：
+
+- `/vlm/`：专题总览
+- `/vlm/report/`：报告全文
+- `/vlm/literature/`：结构化文献检索
+
+校验该报告时执行：
+
+```bash
+pnpm validate:vlm
+```

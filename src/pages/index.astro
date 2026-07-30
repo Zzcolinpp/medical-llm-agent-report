@@ -56,6 +56,34 @@ const scopeLabel = (scope: string) => scope === 'edge' ? '边缘相关' : scope 
     </div>
   </section>
 
+  <section class="report-directory" aria-labelledby="report-directory-title">
+    <div class="container report-directory__inner">
+      <div class="report-directory__intro">
+        <p class="eyebrow">REPORT LIBRARY · 02 TRACKS</p>
+        <h2 id="report-directory-title">选择专题报告</h2>
+        <p>两个独立专题共用同一套阅读、索引与深链接体验，可从这里切换研究视角。</p>
+      </div>
+      <div class="report-directory__list">
+        <a class="report-directory__item" href={`${base}report/`}>
+          <span class="report-directory__number">01</span>
+          <span>
+            <strong>医学 LLM / Agent</strong>
+            <small>临床大语言模型、生成式 AI 与智能体</small>
+          </span>
+          <ArrowUpRight size={17} strokeWidth={1.7} aria-hidden="true" />
+        </a>
+        <a class="report-directory__item" href={`${base}vlm/`}>
+          <span class="report-directory__number">02</span>
+          <span>
+            <strong>深度学习 / VLM / 扩散</strong>
+            <small>医学视觉语言、多模态、生成式与基础模型</small>
+          </span>
+          <ArrowUpRight size={17} strokeWidth={1.7} aria-hidden="true" />
+        </a>
+      </div>
+    </div>
+  </section>
+
   <section class="stat-strip" aria-label="报告统计">
     <div class="container stat-grid">
       <div class="stat-item"><strong>{mainPapers.length}</strong><span>目标期刊文献</span></div>

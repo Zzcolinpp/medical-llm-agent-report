@@ -147,21 +147,32 @@ function headingText(node: MdNode): string {
 }
 
 function parseCategory(title: string): Omit<Category, 'id'> | null {
-  const match = title.match(/^[一二三四五六七八九十]+、(.+?)（(\d+)\s*篇）$/);
-  if (!match) {
+  const countMatch = title.match(/(\d+)\s*篇\s*）\s*$/u);
+  if (!countMatch) {
     return null;
   }
-  const categoryTitle = cleanText(match[1]);
+  const categoryTitle = cleanText(
+    title
+      .slice(0, countMatch.index)
+      .replace(/^[一二三四五六七八九十]+、\s*/u, '')
+      .replace(/（\s*[^（）]*[，,]\s*$/u, '')
+      .replace(/[（(]\s*$/u, '')
+  );
+  if (!categoryTitle) {
+    return null;
+  }
   return {
     title: categoryTitle,
-    count: Number(match[2]),
+    count: Number(countMatch[1]),
     isEdge: categoryTitle.startsWith('【边缘相关】')
   };
 }
 
 function parseMeta(sourceText: string): ReportMeta {
   const valueFor = (label: string): string => {
-    const match = sourceText.match(new RegExp(`^> \\*\\*${label}\\*\\*：(.+)$`, 'm'));
+    const match = sourceText.match(
+      new RegExp(`\\*\\*${label}\\*\\*：([^\\n]*?)(?=\\s*[|｜]\\s*\\*\\*|\\s+\\*\\*[^*]+\\*\\*：|$)`, 'm')
+    );
     return match?.[1]?.trim() ?? '';
   };
 
@@ -198,15 +209,23 @@ function parsePaper(
     return null;
   }
 
+  const englishTitleFrom = (node: MdNode): string => {
+    const children = node.children ?? [];
+    const strongIndex = children.findIndex((child) => child.type === 'strong');
+    const titleNode = children
+      .slice(0, strongIndex >= 0 ? strongIndex : children.length)
+      .find((child) => child.type === 'emphasis');
+    return titleNode ? cleanText(textOf(titleNode)) : '';
+  };
   const englishIndex = body.findIndex(
-    (node, index) =>
-      index < metaIndex &&
-      node.type === 'paragraph' &&
-      (node.children ?? []).some((child) => child.type === 'emphasis')
+    (node, index) => index <= metaIndex && node.type === 'paragraph' && Boolean(englishTitleFrom(node))
   );
-  const titleEn = englishIndex >= 0 ? cleanText(textOf(body[englishIndex])) : '';
+  const titleEn = englishIndex >= 0 ? englishTitleFrom(body[englishIndex]) : '';
   const metaNode = body[metaIndex];
-  const metaText = cleanText(textOf(metaNode));
+  const metaChildren = metaNode.children ?? [];
+  const journalNode = metaChildren.find((child) => child.type === 'strong');
+  const metadataStart = journalNode ? metaChildren.indexOf(journalNode) : 0;
+  const metaText = cleanText(metaChildren.slice(metadataStart).map(textOf).join(''));
   const metadataSegments = metaText.split('·').map((segment) => segment.trim()).filter(Boolean);
   const date = metaText.match(datePattern)?.[0] ?? '';
   const journal = metadataSegments[0] ?? '';
@@ -277,6 +296,7 @@ function extractSectionsAndPapers(root: MdNode): {
   const categories: Category[] = [];
   const sections: ReportSection[] = [];
   const papers: Paper[] = [];
+  const usedPaperSlugs = new Set<string>();
   let context: ParseContext | null = null;
 
   for (let index = 0; index < nodes.length; index += 1) {
@@ -327,7 +347,22 @@ function extractSectionsAndPapers(root: MdNode): {
     const endIndex = nextHeadingIndex(nodes, index, 3);
     const paper = parsePaper(nodes, index, endIndex, context);
     if (paper) {
-      setHeadingId(node, paper.slug);
+      let uniqueSlug = paper.slug;
+      if (usedPaperSlugs.has(uniqueSlug)) {
+        const suffixBase = paper.pmid
+          ? `paper-pmid-${paper.pmid}`
+          : `paper-hash-${hash(`${paper.titleZh}|${paper.date}|${paper.categoryId}|${index}`)}`;
+        uniqueSlug = suffixBase;
+        let suffix = 2;
+        while (usedPaperSlugs.has(uniqueSlug)) {
+          uniqueSlug = `${suffixBase}-${suffix}`;
+          suffix += 1;
+        }
+        paper.id = uniqueSlug;
+        paper.slug = uniqueSlug;
+      }
+      usedPaperSlugs.add(uniqueSlug);
+      setHeadingId(node, uniqueSlug);
       papers.push(paper);
     }
   }

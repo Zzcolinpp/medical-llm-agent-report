@@ -10,6 +10,7 @@
     "check": "astro check",
     "test": "tsx --test tests/report.test.ts",
     "validate": "tsx scripts/validate-report.ts",
+    "validate:vlm": "tsx scripts/validate-vlm-report.ts",
     "report:import": "tsx scripts/import-report.ts"
   },
   "dependencies": {
