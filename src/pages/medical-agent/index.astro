@@ -1,0 +1,117 @@
+---
+import { ArrowUpRight, BarChart3, BookOpen, Search } from 'lucide-astro';
+import Layout from '../../layouts/Layout.astro';
+import { medicalAgentReport } from '../../lib/medical-agent-report';
+
+const base = import.meta.env.BASE_URL;
+const reportPath = `${base}medical-agent/report/`;
+const literaturePath = `${base}medical-agent/literature/`;
+const coreCount = medicalAgentReport.papers.filter((paper) => paper.scope === 'core').length;
+const edgeCount = medicalAgentReport.papers.filter((paper) => paper.scope === 'edge').length;
+const latestPapers = [...medicalAgentReport.papers].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 8);
+const maxCategoryCount = Math.max(...medicalAgentReport.categories.map((category) => category.count));
+const scopeLabel = (scope: string) => scope === 'edge' ? '边缘相关' : '核心相关';
+---
+
+<Layout
+  title="生成式 AI / 对话式 AI / 智能体 · 文献追踪"
+  description="CNS及顶级医刊医学大语言模型、生成式AI、对话式AI与智能体专题文献追踪报告。"
+  active="medical-agent"
+  reportLabel="医学 LLM / 生成式 AI / 对话式 AI / 智能体文献追踪报告"
+  reportDate={medicalAgentReport.meta.retrievalDate}
+  brandKicker="MEDICAL GENAI"
+  brandSubline="LLM / AGENT TRACKER"
+>
+  <section class="hero-band hero-band--agent">
+    <div class="container hero-grid">
+      <div class="hero-copy">
+        <p class="eyebrow">CNS + TOP MEDICAL JOURNALS · RESEARCH TRACKER</p>
+        <h1>{medicalAgentReport.meta.title}</h1>
+        <p class="hero-lede">追踪医疗大语言模型、生成式 AI、对话式 AI 与智能体在临床、科研、教育、公共卫生和治理中的最新证据。</p>
+        <div class="hero-actions">
+          <a class="button button--primary" href={reportPath}><BookOpen size={17} strokeWidth={1.8} aria-hidden="true" /><span>阅读全文</span></a>
+          <a class="button button--secondary" href={literaturePath}><Search size={17} strokeWidth={1.8} aria-hidden="true" /><span>检索文献</span></a>
+        </div>
+        <dl class="report-meta-line">
+          <div><dt>检索截止</dt><dd>{medicalAgentReport.meta.retrievalDate}</dd></div>
+          <div><dt>追踪窗口</dt><dd>{medicalAgentReport.meta.trackingWindow}</dd></div>
+          <div><dt>目标期刊</dt><dd>35 种</dd></div>
+        </dl>
+      </div>
+      <div class="hero-note" aria-label="报告摘要">
+        <div class="hero-note__rule"></div>
+        <p class="eyebrow">SCOPE NOTE</p>
+        <p>正文收录 1133 篇唯一文献：650 篇核心相关、483 篇边缘相关。附录一为完整清单快照，只用于全文阅读，不重复计入索引。</p>
+        <a class="text-link" href={`${reportPath}#section-检索与筛选策略-可复现五步法`}>查看检索策略 <ArrowUpRight size={15} strokeWidth={1.8} aria-hidden="true" /></a>
+      </div>
+    </div>
+  </section>
+
+  <section class="stat-strip" aria-label="生成式 AI 报告统计">
+    <div class="container stat-grid">
+      <div class="stat-item"><strong>{medicalAgentReport.papers.length}</strong><span>唯一文献</span></div>
+      <div class="stat-item"><strong>{coreCount}</strong><span>核心相关</span></div>
+      <div class="stat-item"><strong>{edgeCount}</strong><span>边缘相关</span></div>
+      <div class="stat-item"><strong>{medicalAgentReport.categories.length}</strong><span>主题类别</span></div>
+      <div class="stat-item"><strong>35</strong><span>目标期刊</span></div>
+    </div>
+  </section>
+
+  <section class="section-band">
+    <div class="container section-heading-row">
+      <div><p class="eyebrow">01 / DISTRIBUTION</p><h2>研究主题分布</h2></div>
+      <p class="section-note">正文 15 个主题保留原始分类；边缘相关文献单列，并按 PMID 优先、DOI 其次去重。</p>
+    </div>
+    <div class="container distribution-grid">
+      <div class="bar-chart" role="img" aria-label="15 个主题的文献数量分布">
+        {medicalAgentReport.categories.map((category) => (
+          <a class="chart-row" href={`${reportPath}#${category.id}`}>
+            <span class="chart-label">{category.title.replace('【边缘相关】', '')}</span>
+            <span class="chart-track"><span class:list={['chart-fill', { 'chart-fill--edge': category.isEdge }]} style={`--bar-width: ${(category.count / maxCategoryCount) * 100}%`}></span></span>
+            <strong class="chart-count">{category.count}</strong>
+          </a>
+        ))}
+      </div>
+      <aside class="distribution-aside">
+        <div class="aside-marker"><BarChart3 size={19} strokeWidth={1.7} aria-hidden="true" /></div>
+        <h3>从临床应用到自主智能</h3>
+        <p>报告把诊断推理、Agentic AI、多模态模型、临床文书、患者沟通、心理健康、评估、安全治理与科研辅助放在同一条证据链中阅读。</p>
+        <a class="text-link" href={`${literaturePath}?scope=core`}>浏览核心相关文献 <ArrowUpRight size={15} strokeWidth={1.8} aria-hidden="true" /></a>
+      </aside>
+    </div>
+  </section>
+
+  <section class="section-band section-band--tint">
+    <div class="container section-heading-row">
+      <div><p class="eyebrow">02 / LATEST PAPERS</p><h2>最近收录</h2></div>
+      <a class="text-link" href={`${literaturePath}?sort=date`}>查看完整清单 <ArrowUpRight size={15} strokeWidth={1.8} aria-hidden="true" /></a>
+    </div>
+    <div class="container paper-list paper-list--latest">
+      {latestPapers.map((paper) => (
+        <article class="paper-card paper-card--compact">
+          <div class="paper-card__topline"><span class:list={['scope-badge', `scope-badge--${paper.scope}`]}>{scopeLabel(paper.scope)}</span><span>{paper.date}</span><span>{paper.category}</span></div>
+          <h3><a href={`${reportPath}#${paper.slug}`}>{paper.titleZh}</a></h3>
+          {paper.titleEn && <p class="paper-card__english">{paper.titleEn}</p>}
+          <div class="paper-card__bottomline"><span>{paper.journal}</span>{paper.pmidUrl && <a href={paper.pmidUrl}>PMID {paper.pmid}</a>}{paper.doiUrl && <a href={paper.doiUrl}>DOI <ArrowUpRight size={13} strokeWidth={1.8} aria-hidden="true" /></a>}</div>
+        </article>
+      ))}
+    </div>
+  </section>
+
+  <section class="section-band">
+    <div class="container section-heading-row">
+      <div><p class="eyebrow">03 / TOPIC INDEX</p><h2>按主题进入</h2></div>
+      <p class="section-note">从主题目录进入全文锚点，或打开检索页进行多条件筛选。</p>
+    </div>
+    <div class="container topic-grid">
+      {medicalAgentReport.categories.map((category, index) => (
+        <a class="topic-link" href={`${reportPath}#${category.id}`}>
+          <span class="topic-link__number">{String(index + 1).padStart(2, '0')}</span>
+          <span class="topic-link__title">{category.title}</span>
+          <strong>{category.count}</strong>
+          <ArrowUpRight size={16} strokeWidth={1.7} aria-hidden="true" />
+        </a>
+      ))}
+    </div>
+  </section>
+</Layout>

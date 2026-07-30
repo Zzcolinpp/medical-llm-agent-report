@@ -95,7 +95,7 @@ const searchText = (paper: Paper) => [paper.titleZh, paper.titleEn, paper.summar
           <span>{paper.articleType}</span>
         </div>
         <h2><a href={`${reportPath}#${paper.slug}`}>{paper.titleZh}</a></h2>
-        <p class="paper-card__english">{paper.titleEn}</p>
+        {paper.titleEn && <p class="paper-card__english">{paper.titleEn}</p>}
         <p class="paper-card__summary">{paper.summary}</p>
         <p class="paper-card__takeaway"><strong>要点</strong>{paper.takeaway}</p>
           <div class="paper-card__bottomline">

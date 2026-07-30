@@ -7,6 +7,8 @@ import { validateParsedReport } from '../scripts/report-validation';
 import { validateVlmReport } from '../scripts/vlm-report-validation';
 import { buildSurgeryReport } from '../src/lib/surgery-report-parser';
 import { validateSurgeryReport } from '../scripts/surgery-report-validation';
+import { buildMedicalAgentReport } from '../src/lib/medical-agent-report-parser';
+import { validateMedicalAgentReport } from '../scripts/medical-agent-report-validation';
 
 const markdown = readFileSync(resolve('src/content/report.md'), 'utf8');
 const parsed = parseReport(markdown);
@@ -48,4 +50,14 @@ test('keeps the surgery report inventory unique and appendix-free', () => {
   assert.deepEqual(validateSurgeryReport(surgeryParsed), []);
   assert.equal(surgeryParsed.papers.filter((paper) => paper.isAppendix).length, 0);
   assert.equal(surgeryParsed.papers.filter((paper) => /arXiv|medRxiv|bioRxiv/i.test(paper.journal)).length, 541);
+});
+
+test('keeps the medical GenAI report inventory unique and appendix-free', () => {
+  const medicalAgentMarkdown = readFileSync(resolve('src/content/medical-agent-report.md'), 'utf8');
+  const medicalAgentParsed = buildMedicalAgentReport(medicalAgentMarkdown);
+  assert.deepEqual(validateMedicalAgentReport(medicalAgentParsed), []);
+  assert.equal(medicalAgentParsed.papers.length, 1133);
+  assert.equal(medicalAgentParsed.papers.filter((paper) => paper.scope === 'core').length, 650);
+  assert.equal(medicalAgentParsed.papers.filter((paper) => paper.scope === 'edge').length, 483);
+  assert.equal(medicalAgentParsed.papers.filter((paper) => paper.isAppendix).length, 0);
 });

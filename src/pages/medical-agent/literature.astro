@@ -1,0 +1,43 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import LiteratureExplorer from '../../components/LiteratureExplorer.astro';
+import { medicalAgentReport } from '../../lib/medical-agent-report';
+
+const base = import.meta.env.BASE_URL;
+const reportPath = `${base}medical-agent/report/`;
+const scopeCounts = {
+  core: medicalAgentReport.papers.filter((paper) => paper.scope === 'core').length,
+  edge: medicalAgentReport.papers.filter((paper) => paper.scope === 'edge').length,
+  sister: medicalAgentReport.papers.filter((paper) => paper.scope === 'sister').length
+};
+---
+
+<Layout
+  title="文献检索 · 生成式 AI / 对话式 AI / 智能体"
+  description="按主题、范围、文章类型和年份检索医学大语言模型、生成式AI、对话式AI与智能体文献。"
+  active="medical-agent-literature"
+  reportLabel="医学 LLM / 生成式 AI / 对话式 AI / 智能体文献追踪报告"
+  reportDate={medicalAgentReport.meta.retrievalDate}
+  brandKicker="MEDICAL GENAI"
+  brandSubline="LLM / AGENT TRACKER"
+>
+  <section class="page-intro-band">
+    <div class="container page-intro">
+      <div>
+        <p class="eyebrow">MEDICAL GENAI INDEX · {medicalAgentReport.papers.length} RECORDS</p>
+        <h1>文献检索</h1>
+        <p>在 1133 篇唯一记录中按主题、范围、文章类型和年份定位论文，再返回报告原文阅读上下文。</p>
+      </div>
+      <div class="page-intro__stats">
+        <span><strong>{scopeCounts.core}</strong>核心</span>
+        <span><strong>{scopeCounts.edge}</strong>边缘</span>
+        <span><strong>{scopeCounts.sister}</strong>姊妹刊</span>
+      </div>
+    </div>
+  </section>
+  <section class="section-band section-band--compact">
+    <div class="container">
+      <LiteratureExplorer papers={medicalAgentReport.papers} categories={medicalAgentReport.categories} base={base} reportPath={reportPath} />
+    </div>
+  </section>
+</Layout>

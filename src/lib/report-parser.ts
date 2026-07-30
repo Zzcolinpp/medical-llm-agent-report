@@ -83,7 +83,7 @@ type ParseContext = {
   isAppendix: boolean;
 };
 
-const datePattern = /\b20\d{2}-\d{2}-\d{2}\b/;
+const datePattern = /\b20\d{2}-(?:(?:\d{1,2})(?:-\d{1,2})?|(?:[A-Za-z]{3})(?:-\d{1,2})?)\b/;
 
 function textOf(node: MdNode): string {
   if (node.type === 'text' || node.type === 'inlineCode' || node.type === 'code') {

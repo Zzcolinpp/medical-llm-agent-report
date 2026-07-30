@@ -12,6 +12,7 @@
     "validate": "tsx scripts/validate-report.ts",
     "validate:vlm": "tsx scripts/validate-vlm-report.ts",
     "validate:surgery": "tsx scripts/validate-surgery-report.ts",
+    "validate:medical-agent": "tsx scripts/validate-medical-agent-report.ts",
     "report:import": "tsx scripts/import-report.ts"
   },
   "dependencies": {

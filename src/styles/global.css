@@ -255,6 +255,18 @@ input {
   color: var(--navy);
 }
 
+.hero-band--agent {
+  background: #f4efe8;
+}
+
+.hero-band--agent .eyebrow {
+  color: var(--coral);
+}
+
+.hero-band--agent .hero-note__rule {
+  background: var(--coral);
+}
+
 .hero-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.55fr) minmax(260px, 0.65fr);
@@ -1415,6 +1427,18 @@ input {
 
   .nav-link--vlm .nav-label--short {
     display: inline;
+  }
+
+  .nav-link--agent .nav-label--wide {
+    display: none;
+  }
+
+  .nav-link--agent .nav-label--short {
+    display: inline;
+  }
+
+  .header-link {
+    display: none;
   }
 
   .hero-grid {

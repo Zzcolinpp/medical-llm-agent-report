@@ -5,7 +5,7 @@ import '../styles/global.css';
 interface Props {
   title: string;
   description?: string;
-  active?: 'home' | 'report' | 'literature' | 'vlm' | 'vlm-report' | 'vlm-literature' | 'surgery' | 'surgery-report' | 'surgery-literature';
+  active?: 'home' | 'report' | 'literature' | 'vlm' | 'vlm-report' | 'vlm-literature' | 'surgery' | 'surgery-report' | 'surgery-literature' | 'medical-agent' | 'medical-agent-report' | 'medical-agent-literature';
   reportLabel?: string;
   reportDate?: string;
   brandKicker?: string;
@@ -28,15 +28,21 @@ const vlmHref = `${base}vlm/`;
 const vlmReportHref = `${base}vlm/report/`;
 const surgeryHref = `${base}surgery/`;
 const surgeryReportHref = `${base}surgery/report/`;
+const medicalAgentHref = `${base}medical-agent/`;
+const medicalAgentReportHref = `${base}medical-agent/report/`;
 const primaryReportHref = active === 'vlm' || active === 'vlm-report' || active === 'vlm-literature'
   ? vlmReportHref
   : active === 'surgery' || active === 'surgery-report' || active === 'surgery-literature'
     ? surgeryReportHref
+    : active === 'medical-agent' || active === 'medical-agent-report' || active === 'medical-agent-literature'
+      ? medicalAgentReportHref
   : reportHref;
 const primaryReportLabel = active === 'vlm' || active === 'vlm-report' || active === 'vlm-literature'
   ? '进入 VLM 报告'
   : active === 'surgery' || active === 'surgery-report' || active === 'surgery-literature'
     ? '进入手术 AI 报告'
+    : active === 'medical-agent' || active === 'medical-agent-report' || active === 'medical-agent-literature'
+      ? '进入生成式 AI 报告'
   : '进入报告';
 const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site).toString() : undefined;
 ---
@@ -79,6 +85,10 @@ const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site).toString(
           <a class:list={['nav-link', 'nav-link--surgery', { active: active === 'surgery' || active === 'surgery-report' || active === 'surgery-literature' }]} href={surgeryHref}>
             <span class="nav-label--wide">手术 AI</span>
             <span class="nav-label--short" aria-hidden="true">手术</span>
+          </a>
+          <a class:list={['nav-link', 'nav-link--agent', { active: active === 'medical-agent' || active === 'medical-agent-report' || active === 'medical-agent-literature' }]} href={medicalAgentHref}>
+            <span class="nav-label--wide">生成式 AI</span>
+            <span class="nav-label--short" aria-hidden="true">GenAI</span>
           </a>
         </nav>
         <a class="header-link" href={primaryReportHref}>

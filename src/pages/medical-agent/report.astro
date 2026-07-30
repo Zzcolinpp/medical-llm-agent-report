@@ -1,0 +1,41 @@
+---
+import { Search } from 'lucide-astro';
+import Layout from '../../layouts/Layout.astro';
+import { medicalAgentReport } from '../../lib/medical-agent-report';
+
+const base = import.meta.env.BASE_URL;
+const reportPath = `${base}medical-agent/report/`;
+const literaturePath = `${base}medical-agent/literature/`;
+const tocSections = medicalAgentReport.sections.filter((section) => section.title !== '一图速览：核心相关文献分类分布');
+---
+
+<Layout
+  title="报告全文 · 生成式 AI / 对话式 AI / 智能体"
+  description="医学大语言模型、生成式AI、对话式AI与智能体专题文献追踪报告全文。"
+  active="medical-agent-report"
+  reportLabel="医学 LLM / 生成式 AI / 对话式 AI / 智能体文献追踪报告"
+  reportDate={medicalAgentReport.meta.retrievalDate}
+  brandKicker="MEDICAL GENAI"
+  brandSubline="LLM / AGENT TRACKER"
+>
+  <div class="container report-shell">
+    <div class="report-tools">
+      <span class="eyebrow">FULL REPORT · {medicalAgentReport.meta.retrievalDate} · {medicalAgentReport.papers.length} RECORDS</span>
+      <a class="button button--secondary button--small" href={literaturePath}><Search size={15} strokeWidth={1.8} aria-hidden="true" /><span>检索这份报告</span></a>
+    </div>
+    <div class="report-layout">
+      <aside class="report-toc" aria-label="报告目录">
+        <div class="toc-title">目录</div>
+        <nav>
+          {tocSections.map((section) => (
+            <a class:list={['toc-link', { 'toc-link--category': section.isCategory }]} href={`${reportPath}#${section.id}`}>
+              <span>{section.title}</span>
+              {section.count && <strong>{section.count}</strong>}
+            </a>
+          ))}
+        </nav>
+      </aside>
+      <article class="report-document" set:html={medicalAgentReport.html}></article>
+    </div>
+  </div>
+</Layout>
