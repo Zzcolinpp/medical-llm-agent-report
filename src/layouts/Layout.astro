@@ -1,11 +1,11 @@
 ---
-import { ArrowUpRight, BookOpen, Search } from 'lucide-astro';
+import { BookOpen, CalendarDays, Search } from 'lucide-astro';
 import '../styles/global.css';
 
 interface Props {
   title: string;
   description?: string;
-  active?: 'home' | 'report' | 'literature' | 'vlm' | 'vlm-report' | 'vlm-literature' | 'surgery' | 'surgery-report' | 'surgery-literature' | 'medical-agent' | 'medical-agent-report' | 'medical-agent-literature';
+  active?: 'home' | 'annual' | 'monthly' | 'search' | 'report' | 'literature' | 'vlm' | 'vlm-report' | 'vlm-literature' | 'surgery' | 'surgery-report' | 'surgery-literature' | 'medical-agent' | 'medical-agent-report' | 'medical-agent-literature';
   reportLabel?: string;
   reportDate?: string;
   brandKicker?: string;
@@ -14,36 +14,16 @@ interface Props {
 
 const {
   title,
-  description = '面向医学大语言模型、生成式 AI 与智能体研究的结构化文献追踪报告。',
+  description = 'AI 医疗领域前沿文献追踪平台，提供年度报告、月度报告与跨领域文献检索。',
   active = 'home',
-  reportLabel = '医学 LLM / Agent 文献追踪报告',
-  reportDate = '2026-07-14',
-  brandKicker = 'DIGITAL MEDICINE',
-  brandSubline = 'LLM / AGENT TRACKER'
+  reportLabel = 'AI 医疗前沿文献追踪',
+  reportDate = '2026-07-17',
+  brandKicker: _brandKicker,
+  brandSubline: _brandSubline
 } = Astro.props;
 const base = import.meta.env.BASE_URL;
-const reportHref = `${base}report/`;
-const literatureHref = `${base}literature/`;
-const vlmHref = `${base}vlm/`;
-const vlmReportHref = `${base}vlm/report/`;
-const surgeryHref = `${base}surgery/`;
-const surgeryReportHref = `${base}surgery/report/`;
-const medicalAgentHref = `${base}medical-agent/`;
-const medicalAgentReportHref = `${base}medical-agent/report/`;
-const primaryReportHref = active === 'vlm' || active === 'vlm-report' || active === 'vlm-literature'
-  ? vlmReportHref
-  : active === 'surgery' || active === 'surgery-report' || active === 'surgery-literature'
-    ? surgeryReportHref
-    : active === 'medical-agent' || active === 'medical-agent-report' || active === 'medical-agent-literature'
-      ? medicalAgentReportHref
-  : reportHref;
-const primaryReportLabel = active === 'vlm' || active === 'vlm-report' || active === 'vlm-literature'
-  ? '进入 VLM 报告'
-  : active === 'surgery' || active === 'surgery-report' || active === 'surgery-literature'
-    ? '进入手术 AI 报告'
-    : active === 'medical-agent' || active === 'medical-agent-report' || active === 'medical-agent-literature'
-      ? '进入生成式 AI 报告'
-  : '进入报告';
+const annualActive = active === 'annual' || active === 'report' || active === 'vlm' || active === 'vlm-report' || active === 'surgery' || active === 'surgery-report' || active === 'medical-agent' || active === 'medical-agent-report';
+const searchActive = active === 'search' || active === 'literature' || active === 'vlm-literature' || active === 'surgery-literature' || active === 'medical-agent-literature';
 const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site).toString() : undefined;
 ---
 
@@ -55,6 +35,7 @@ const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site).toString(
     <meta name="theme-color" content="#f3f5f2" />
     <meta name="site-base" content={base} />
     <meta name="description" content={description} />
+    <link rel="icon" href={`${base}favicon.svg`} type="image/svg+xml" />
     {canonical && <link rel="canonical" href={canonical} />}
     <title>{title}</title>
   </head>
@@ -62,39 +43,27 @@ const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site).toString(
     <a class="skip-link" href="#main-content">跳到主要内容</a>
     <header class="site-header">
       <div class="site-header__inner">
-        <a class="brand" href={base} aria-label="医学人工智能文献追踪首页">
-          <span class="brand__mark">npj</span>
-          <span class="brand__text">{brandKicker}<br /><small>{brandSubline}</small></span>
+        <a class="brand" href={base} aria-label="AI 医疗前沿首页">
+          <span class="brand__mark">AI</span>
+          <span class="brand__text">AI 医疗前沿<br /><small>FRONTIER LITERATURE TRACKER</small></span>
         </a>
         <nav class="site-nav" aria-label="主导航">
           <a class:list={['nav-link', { active: active === 'home' }]} href={base}>
             <span>总览</span>
           </a>
-          <a class:list={['nav-link', { active: active === 'report' }]} href={reportHref}>
+          <a class:list={['nav-link', { active: annualActive }]} href={`${base}annual/`}>
             <BookOpen size={16} strokeWidth={1.8} aria-hidden="true" />
-            <span>报告阅读</span>
+            <span>年度报告阅读</span>
           </a>
-          <a class:list={['nav-link', { active: active === 'literature' }]} href={literatureHref}>
+          <a class:list={['nav-link', { active: active === 'monthly' }]} href={`${base}monthly/`}>
+            <CalendarDays size={16} strokeWidth={1.8} aria-hidden="true" />
+            <span>月度报告阅读</span>
+          </a>
+          <a class:list={['nav-link', { active: searchActive }]} href={`${base}search/`}>
             <Search size={16} strokeWidth={1.8} aria-hidden="true" />
             <span>文献检索</span>
           </a>
-          <a class:list={['nav-link', 'nav-link--vlm', { active: active === 'vlm' || active === 'vlm-report' || active === 'vlm-literature' }]} href={vlmHref}>
-            <span class="nav-label--wide">VLM / 扩散</span>
-            <span class="nav-label--short" aria-hidden="true">VLM</span>
-          </a>
-          <a class:list={['nav-link', 'nav-link--surgery', { active: active === 'surgery' || active === 'surgery-report' || active === 'surgery-literature' }]} href={surgeryHref}>
-            <span class="nav-label--wide">手术 AI</span>
-            <span class="nav-label--short" aria-hidden="true">手术</span>
-          </a>
-          <a class:list={['nav-link', 'nav-link--agent', { active: active === 'medical-agent' || active === 'medical-agent-report' || active === 'medical-agent-literature' }]} href={medicalAgentHref}>
-            <span class="nav-label--wide">生成式 AI</span>
-            <span class="nav-label--short" aria-hidden="true">GenAI</span>
-          </a>
         </nav>
-        <a class="header-link" href={primaryReportHref}>
-          <span>{primaryReportLabel}</span>
-          <ArrowUpRight size={15} strokeWidth={1.8} aria-hidden="true" />
-        </a>
       </div>
     </header>
 

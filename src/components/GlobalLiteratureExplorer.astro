@@ -1,0 +1,331 @@
+---
+import { ChevronLeft, ChevronRight, Filter, RotateCcw, Search } from 'lucide-astro';
+import type { CatalogPaper, ReportDomain } from '../lib/report-catalog';
+
+interface Props {
+  papers: CatalogPaper[];
+  domains: ReportDomain[];
+  base: string;
+}
+
+const { papers, domains, base } = Astro.props;
+const years = [...new Set(papers.map((paper) => paper.date.slice(0, 4)).filter(Boolean))].sort().reverse();
+const months = [...new Set(papers.map((paper) => paper.date.slice(0, 7)).filter(Boolean))].sort().reverse();
+const articleTypes = [...new Set(papers.map((paper) => paper.articleType).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'zh-CN'));
+const serializedPapers = JSON.stringify(papers.map((paper) => ({
+  titleZh: paper.titleZh,
+  titleEn: paper.titleEn,
+  journal: paper.journal,
+  date: paper.date,
+  articleType: paper.articleType,
+  pmid: paper.pmid,
+  pmidUrl: paper.pmidUrl,
+  doiUrl: paper.doiUrl,
+  sourceUrl: paper.sourceUrl,
+  summary: paper.summary,
+  takeaway: paper.takeaway,
+  scope: paper.scope,
+  memberships: paper.memberships.map(({ domainId, domainLabel, category, categoryId, reportPath, slug, scope, articleType }) => ({ domainId, domainLabel, category, categoryId, reportPath, slug, scope, articleType }))
+}))).replaceAll('<', '\\u003c');
+---
+
+<div class="explorer global-explorer" data-global-explorer data-base={base}>
+  <script is:inline type="application/json" id="global-literature-data" set:html={serializedPapers}></script>
+  <div class="explorer-controls">
+    <label class="search-field">
+      <Search size={18} strokeWidth={1.8} aria-hidden="true" />
+      <span class="sr-only">搜索文献</span>
+      <input id="global-paper-query" type="search" placeholder="搜索标题、摘要、要点、期刊或分类" autocomplete="off" />
+    </label>
+    <label class="select-field">
+      <span>领域</span>
+      <select id="global-paper-domain">
+        <option value="">全部领域</option>
+        {domains.map((domain) => <option value={domain.id}>{domain.label}</option>)}
+      </select>
+    </label>
+    <label class="select-field select-field--wide">
+      <span>二级分类</span>
+      <select id="global-paper-category">
+        <option value="">全部分类</option>
+        {domains.map((domain) => (
+          <optgroup label={domain.label}>
+            {domain.report.categories.map((category) => <option value={`${domain.id}::${category.id}`}>{category.title}</option>)}
+          </optgroup>
+        ))}
+      </select>
+    </label>
+    <label class="select-field">
+      <span>范围</span>
+      <select id="global-paper-scope">
+        <option value="">全部范围</option>
+        <option value="core">核心相关</option>
+        <option value="edge">边缘相关</option>
+        <option value="sister">姊妹刊</option>
+      </select>
+    </label>
+    <label class="select-field">
+      <span>年份</span>
+      <select id="global-paper-year">
+        <option value="">全部年份</option>
+        {years.map((year) => <option value={year}>{year}</option>)}
+      </select>
+    </label>
+    <label class="select-field">
+      <span>月份</span>
+      <select id="global-paper-month">
+        <option value="">全部月份</option>
+        {months.map((month) => <option value={month}>{month}</option>)}
+      </select>
+    </label>
+    <label class="select-field">
+      <span>类型</span>
+      <select id="global-paper-type">
+        <option value="">全部类型</option>
+        {articleTypes.map((type) => <option value={type}>{type}</option>)}
+      </select>
+    </label>
+    <label class="select-field">
+      <span>排序</span>
+      <select id="global-paper-sort">
+        <option value="date">最新优先</option>
+        <option value="oldest">最早优先</option>
+        <option value="title">标题顺序</option>
+      </select>
+    </label>
+    <button class="icon-button" id="global-clear-filters" type="button" title="清除筛选" aria-label="清除筛选">
+      <RotateCcw size={17} strokeWidth={1.8} aria-hidden="true" />
+    </button>
+  </div>
+
+  <div class="explorer-status">
+    <div class="explorer-status__count" id="global-results-count" aria-live="polite">显示 {papers.length} / {papers.length} 篇</div>
+    <div class="explorer-status__legend">
+      <span><i class="legend-dot legend-dot--core"></i>核心相关</span>
+      <span><i class="legend-dot legend-dot--edge"></i>边缘相关</span>
+      <span><i class="legend-dot legend-dot--sister"></i>姊妹刊</span>
+    </div>
+  </div>
+
+  <div class="search-results" id="global-paper-results"></div>
+  <div class="empty-state" id="global-empty-state" hidden>
+    <Filter size={22} strokeWidth={1.6} aria-hidden="true" />
+    <strong>没有匹配的文献</strong>
+    <span>请调整关键词或筛选条件。</span>
+  </div>
+  <div class="explorer-pagination" id="global-pagination" hidden>
+    <button class="button button--secondary button--small" id="global-prev-page" type="button">
+      <ChevronLeft size={15} strokeWidth={1.8} aria-hidden="true" />
+      <span>上一页</span>
+    </button>
+    <span id="global-page-status" aria-live="polite"></span>
+    <button class="button button--secondary button--small" id="global-next-page" type="button">
+      <span>下一页</span>
+      <ChevronRight size={15} strokeWidth={1.8} aria-hidden="true" />
+    </button>
+  </div>
+</div>
+
+<script>
+  type Membership = {
+    domainId: string;
+    domainLabel: string;
+    category: string;
+    categoryId: string;
+    reportPath: string;
+    slug: string;
+    scope: string;
+    articleType: string;
+  };
+  type CatalogPaper = {
+    titleZh: string;
+    titleEn: string;
+    journal: string;
+    date: string;
+    articleType: string;
+    pmid?: string;
+    pmidUrl?: string;
+    doiUrl?: string;
+    sourceUrl?: string;
+    summary: string;
+    takeaway: string;
+    scope: string;
+    memberships: Membership[];
+  };
+  type State = { q: string; domain: string; category: string; scope: string; year: string; month: string; type: string; sort: string; page: number };
+
+  const explorer = document.querySelector<HTMLElement>('[data-global-explorer]');
+  if (explorer) {
+    const dataNode = explorer.querySelector<HTMLScriptElement>('#global-literature-data');
+    const papers = JSON.parse(dataNode?.textContent || '[]') as CatalogPaper[];
+    const base = explorer.dataset.base || '/';
+    const queryInput = explorer.querySelector<HTMLInputElement>('#global-paper-query');
+    const domainSelect = explorer.querySelector<HTMLSelectElement>('#global-paper-domain');
+    const categorySelect = explorer.querySelector<HTMLSelectElement>('#global-paper-category');
+    const scopeSelect = explorer.querySelector<HTMLSelectElement>('#global-paper-scope');
+    const yearSelect = explorer.querySelector<HTMLSelectElement>('#global-paper-year');
+    const monthSelect = explorer.querySelector<HTMLSelectElement>('#global-paper-month');
+    const typeSelect = explorer.querySelector<HTMLSelectElement>('#global-paper-type');
+    const sortSelect = explorer.querySelector<HTMLSelectElement>('#global-paper-sort');
+    const clearButton = explorer.querySelector<HTMLButtonElement>('#global-clear-filters');
+    const resultsContainer = explorer.querySelector<HTMLElement>('#global-paper-results');
+    const resultCount = explorer.querySelector<HTMLElement>('#global-results-count');
+    const emptyState = explorer.querySelector<HTMLElement>('#global-empty-state');
+    const pagination = explorer.querySelector<HTMLElement>('#global-pagination');
+    const previousButton = explorer.querySelector<HTMLButtonElement>('#global-prev-page');
+    const nextButton = explorer.querySelector<HTMLButtonElement>('#global-next-page');
+    const pageStatus = explorer.querySelector<HTMLElement>('#global-page-status');
+    const pageSize = 50;
+
+    const normalize = (value: string) => value.toLocaleLowerCase().replace(/\s+/g, '');
+    const stateFromUrl = (): State => {
+      const params = new URLSearchParams(window.location.search);
+      return {
+        q: params.get('q') || '',
+        domain: params.get('domain') || '',
+        category: params.get('category') || '',
+        scope: params.get('scope') || '',
+        year: params.get('year') || '',
+        month: params.get('month') || '',
+        type: params.get('type') || '',
+        sort: params.get('sort') || 'date',
+        page: Math.max(1, Number(params.get('page') || '1'))
+      };
+    };
+    const setControls = (state: State) => {
+      if (queryInput) queryInput.value = state.q;
+      if (domainSelect) domainSelect.value = state.domain;
+      if (categorySelect) categorySelect.value = state.category;
+      if (scopeSelect) scopeSelect.value = state.scope;
+      if (yearSelect) yearSelect.value = state.year;
+      if (monthSelect) monthSelect.value = state.month;
+      if (typeSelect) typeSelect.value = state.type;
+      if (sortSelect) sortSelect.value = state.sort;
+    };
+    const getState = (): State => ({
+      q: queryInput?.value || '',
+      domain: domainSelect?.value || '',
+      category: categorySelect?.value || '',
+      scope: scopeSelect?.value || '',
+      year: yearSelect?.value || '',
+      month: monthSelect?.value || '',
+      type: typeSelect?.value || '',
+      sort: sortSelect?.value || 'date',
+      page: Number(explorer.dataset.page || '1')
+    });
+    const updateUrl = (state: State) => {
+      const params = new URLSearchParams();
+      for (const [key, value] of Object.entries(state)) {
+        if (value && !(key === 'sort' && value === 'date') && !(key === 'page' && value === 1)) params.set(key, String(value));
+      }
+      const next = params.toString() ? `${window.location.pathname}?${params.toString()}` : window.location.pathname;
+      window.history.replaceState(null, '', next);
+    };
+    const paperSearchText = (paper: CatalogPaper) => [
+      paper.titleZh, paper.titleEn, paper.summary, paper.takeaway, paper.journal, paper.articleType,
+      ...paper.memberships.flatMap((membership) => [membership.domainLabel, membership.category, membership.articleType])
+    ].join(' ');
+    const scopeLabel = (scope: string) => scope === 'edge' ? '边缘相关' : scope === 'sister' ? '姊妹刊' : '核心相关';
+    const appendText = (parent: Element, tag: string, value: string, className?: string) => {
+      const element = document.createElement(tag);
+      if (className) element.className = className;
+      element.textContent = value;
+      parent.appendChild(element);
+      return element;
+    };
+    const appendExternalLink = (parent: Element, href: string, label: string) => {
+      const link = document.createElement('a');
+      link.href = href;
+      link.target = '_blank';
+      link.rel = 'noreferrer';
+      link.textContent = label;
+      parent.appendChild(link);
+    };
+    const renderPaper = (paper: CatalogPaper) => {
+      const article = document.createElement('article');
+      article.className = 'paper-card paper-result';
+      const topline = appendText(article, 'div', '', 'paper-card__topline');
+      const badge = appendText(topline, 'span', scopeLabel(paper.scope), `scope-badge scope-badge--${paper.scope}`);
+      badge.setAttribute('aria-label', scopeLabel(paper.scope));
+      appendText(topline, 'span', paper.date);
+      appendText(topline, 'span', paper.journal);
+      appendText(topline, 'span', paper.articleType);
+      const heading = document.createElement('h2');
+      const primary = paper.memberships[0];
+      const reportLink = document.createElement('a');
+      reportLink.href = `${base}${primary.reportPath}#${primary.slug}`;
+      reportLink.textContent = paper.titleZh;
+      heading.appendChild(reportLink);
+      article.appendChild(heading);
+      if (paper.titleEn) appendText(article, 'p', paper.titleEn, 'paper-card__english');
+      appendText(article, 'p', paper.summary, 'paper-card__summary');
+      const takeaway = appendText(article, 'p', '', 'paper-card__takeaway');
+      const takeawayLabel = document.createElement('strong');
+      takeawayLabel.textContent = '要点';
+      takeaway.appendChild(takeawayLabel);
+      takeaway.appendChild(document.createTextNode(paper.takeaway));
+      const memberships = appendText(article, 'div', '', 'paper-card__memberships');
+      appendText(memberships, 'span', '归属');
+      paper.memberships.forEach((membership) => {
+        const link = document.createElement('a');
+        link.href = `${base}${membership.reportPath}#${membership.slug}`;
+        link.textContent = `${membership.domainLabel} / ${membership.category}`;
+        memberships.appendChild(link);
+      });
+      const bottomline = appendText(article, 'div', '', 'paper-card__bottomline');
+      appendText(bottomline, 'span', paper.journal);
+      if (paper.pmidUrl && paper.pmid) appendExternalLink(bottomline, paper.pmidUrl, `PMID ${paper.pmid}`);
+      if (paper.doiUrl) appendExternalLink(bottomline, paper.doiUrl, 'DOI');
+      if (paper.sourceUrl && !paper.pmidUrl && !paper.doiUrl) appendExternalLink(bottomline, paper.sourceUrl, '原文');
+      return article;
+    };
+    const sortedPapers = (items: CatalogPaper[], sort: string) => [...items].sort((a, b) => {
+      if (sort === 'title') return a.titleZh.localeCompare(b.titleZh, 'zh-CN');
+      const direction = sort === 'oldest' ? 1 : -1;
+      return a.date.localeCompare(b.date) * direction || a.titleZh.localeCompare(b.titleZh, 'zh-CN');
+    });
+    const render = (requestedState?: Partial<State>) => {
+      const state = { ...getState(), ...requestedState };
+      const query = normalize(state.q);
+      const categoryParts = state.category.split('::');
+      const filtered = sortedPapers(papers.filter((paper) => {
+        const matchesDomain = !state.domain || paper.memberships.some((membership) => membership.domainId === state.domain);
+        const matchesCategory = !state.category || paper.memberships.some((membership) => membership.domainId === categoryParts[0] && membership.categoryId === categoryParts[1]);
+        const matchesScope = !state.scope || paper.memberships.some((membership) => membership.scope === state.scope);
+        const matchesType = !state.type || paper.articleType === state.type || paper.memberships.some((membership) => membership.articleType === state.type);
+        return (!query || normalize(paperSearchText(paper)).includes(query))
+          && matchesDomain
+          && matchesCategory
+          && matchesScope
+          && (!state.year || paper.date.slice(0, 4) === state.year)
+          && (!state.month || paper.date.slice(0, 7) === state.month)
+          && matchesType;
+      }), state.sort);
+      const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+      const page = Math.min(Math.max(1, state.page), totalPages);
+      explorer.dataset.page = String(page);
+      if (resultsContainer) {
+        resultsContainer.replaceChildren(...filtered.slice((page - 1) * pageSize, page * pageSize).map(renderPaper));
+      }
+      if (resultCount) resultCount.textContent = `显示 ${(filtered.length ? (page - 1) * pageSize + 1 : 0)}–${Math.min(page * pageSize, filtered.length)} / ${filtered.length} 篇`;
+      if (emptyState) emptyState.hidden = filtered.length !== 0;
+      if (pagination) pagination.hidden = totalPages <= 1 || filtered.length === 0;
+      if (pageStatus) pageStatus.textContent = `${page} / ${totalPages}`;
+      if (previousButton) previousButton.disabled = page <= 1;
+      if (nextButton) nextButton.disabled = page >= totalPages;
+      updateUrl({ ...state, page });
+    };
+    const initialState = stateFromUrl();
+    setControls(initialState);
+    explorer.dataset.page = String(initialState.page);
+    [queryInput, domainSelect, categorySelect, scopeSelect, yearSelect, monthSelect, typeSelect, sortSelect]
+      .forEach((control) => control?.addEventListener('input', () => render({ page: 1 })));
+    clearButton?.addEventListener('click', () => {
+      setControls({ q: '', domain: '', category: '', scope: '', year: '', month: '', type: '', sort: 'date', page: 1 });
+      render({ page: 1 });
+    });
+    previousButton?.addEventListener('click', () => render({ page: Math.max(1, Number(explorer.dataset.page || '1') - 1) }));
+    nextButton?.addEventListener('click', () => render({ page: Number(explorer.dataset.page || '1') + 1 }));
+    render(initialState);
+  }
+</script>

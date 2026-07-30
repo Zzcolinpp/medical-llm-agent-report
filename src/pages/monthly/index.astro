@@ -1,0 +1,64 @@
+---
+import { ArrowUpRight, CalendarDays } from 'lucide-astro';
+import Layout from '../../layouts/Layout.astro';
+import { monthlyEntriesFor, monthlyPeriods } from '../../lib/monthly-reports';
+import { reportDomainMap } from '../../lib/report-catalog';
+
+const base = import.meta.env.BASE_URL;
+const monthLabel = (period: string) => period.replace('-', ' 年 ') + ' 月';
+---
+
+<Layout
+  title="月度报告阅读 · AI 医疗前沿"
+  description="按月份阅读 AI 医疗三大领域的独立文献追踪报告。"
+  active="monthly"
+>
+  <section class="page-intro-band">
+    <div class="container page-intro">
+      <div>
+        <p class="eyebrow">MONTHLY REPORT LIBRARY · 03 DOMAINS</p>
+        <h1>月度报告阅读</h1>
+        <p>月报只展示已经从独立 Obsidian 快照导入并通过校验的内容，不以年度报告数据代替月报。</p>
+      </div>
+      <div class="page-intro__stats">
+        <span><strong>{monthlyPeriods.length}</strong>已发布月份</span>
+        <span><strong>{monthlyPeriods.length ? monthlyEntriesFor(monthlyPeriods[0]).length : 0}</strong>最新月报</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-band section-band--compact">
+    <div class="container monthly-directory">
+      {monthlyPeriods.length > 0 ? monthlyPeriods.map((period) => (
+        <article class="monthly-directory__item">
+          <div>
+            <p class="eyebrow">MONTHLY REPORT · {period}</p>
+            <h2>{monthLabel(period)}</h2>
+          </div>
+          <div class="monthly-directory__domains">
+            {monthlyEntriesFor(period).map((entry) => {
+              const domain = reportDomainMap.get(entry.domainId);
+              return domain ? (
+                <a class="topic-link" href={`${base}monthly/${period}/${entry.domainId}/`}>
+                  <span class="topic-link__title">{domain.label}</span>
+                  <strong>{entry.report.papers.length}</strong>
+                  <ArrowUpRight size={15} strokeWidth={1.8} aria-hidden="true" />
+                </a>
+              ) : null;
+            })}
+          </div>
+        </article>
+      )) : (
+        <div class="monthly-empty-state">
+          <CalendarDays size={28} strokeWidth={1.6} aria-hidden="true" />
+          <h2>尚无已发布的独立月度报告</h2>
+          <p>月报入口已经就绪。导入经过校验的月度笔记后，会按“年月 → 领域 → 二级分类”生成阅读页面。</p>
+          <a class="text-link" href={`${base}annual/`}>
+            <span>先阅读年度报告</span>
+            <ArrowUpRight size={15} strokeWidth={1.8} aria-hidden="true" />
+          </a>
+        </div>
+      )}
+    </div>
+  </section>
+</Layout>

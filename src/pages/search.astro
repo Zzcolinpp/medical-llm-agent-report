@@ -1,0 +1,32 @@
+---
+import Layout from '../layouts/Layout.astro';
+import GlobalLiteratureExplorer from '../components/GlobalLiteratureExplorer.astro';
+import { catalogPapers, catalogStats, reportDomains } from '../lib/report-catalog';
+
+const base = import.meta.env.BASE_URL;
+const domainCounts = reportDomains.map((domain) => ({ label: domain.label, count: domain.report.papers.length }));
+---
+
+<Layout
+  title="文献检索 · AI 医疗前沿"
+  description="跨医学视觉与基础模型、手术与围手术期 AI、医疗 LLM / Agent 三大领域检索前沿文献。"
+  active="search"
+>
+  <section class="page-intro-band">
+    <div class="container page-intro">
+      <div>
+        <p class="eyebrow">GLOBAL LITERATURE INDEX · {catalogStats.uniqueRecords} UNIQUE RECORDS</p>
+        <h1>文献检索</h1>
+        <p>跨三大领域按关键词、二级分类、范围、时间和文章类型定位论文，再返回对应年度报告的原文上下文。</p>
+      </div>
+      <div class="page-intro__stats">
+        {domainCounts.map((item) => <span><strong>{item.count}</strong>{item.label}</span>)}
+      </div>
+    </div>
+  </section>
+  <section class="section-band section-band--compact">
+    <div class="container">
+      <GlobalLiteratureExplorer papers={catalogPapers} domains={reportDomains} base={base} />
+    </div>
+  </section>
+</Layout>

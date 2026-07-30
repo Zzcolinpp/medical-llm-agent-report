@@ -7,7 +7,7 @@ const base = import.meta.env.BASE_URL;
 const tocSections = report.sections.filter((section) => section.title !== '一图速览：文献分布');
 ---
 
-<Layout title="报告全文 · 医学 LLM / Agent 文献追踪" active="report">
+<Layout title="报告全文 · 医学 LLM / Agent 文献追踪" active="report" reportDate={report.meta.retrievalDate} reportLabel="医疗 LLM / Agent 单刊子报告">
   <div class="container report-shell">
     <div class="report-tools">
       <span class="eyebrow">FULL REPORT · {report.meta.retrievalDate}</span>

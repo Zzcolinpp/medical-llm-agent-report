@@ -1,0 +1,85 @@
+---
+import { ArrowUpRight, BookOpen, ChevronDown } from 'lucide-astro';
+import Layout from '../../layouts/Layout.astro';
+import { legacyReport, reportDomains } from '../../lib/report-catalog';
+
+const base = import.meta.env.BASE_URL;
+const formatDate = (value: string) => value.replaceAll('-', '.');
+---
+
+<Layout
+  title="年度报告阅读 · AI 医疗前沿"
+  description="按三大领域阅读 AI 医疗前沿年度文献追踪报告，并从原报告章节进入二级专题。"
+  active="annual"
+>
+  <section class="page-intro-band">
+    <div class="container page-intro">
+      <div>
+        <p class="eyebrow">ANNUAL REPORT LIBRARY · 03 DOMAINS</p>
+        <h1>年度报告阅读</h1>
+        <p>三大领域沿用各自报告的原始分类和证据口径，进入专题后可按二级分类阅读全文与文献索引。</p>
+      </div>
+      <div class="page-intro__stats">
+        <span><strong>{reportDomains.length}</strong>领域</span>
+        <span><strong>{reportDomains.reduce((total, domain) => total + domain.report.papers.length, 0)}</strong>来源记录</span>
+        <span><strong>{formatDate(reportDomains.map((domain) => domain.report.meta.retrievalDate).sort().at(-1) ?? '')}</strong>最新截止</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-band section-band--compact">
+    <div class="container domain-directory">
+      {reportDomains.map((domain, index) => (
+        <article class="domain-directory__item">
+          <div class="domain-directory__main">
+            <span class="report-directory__number">{String(index + 1).padStart(2, '0')}</span>
+            <div>
+              <p class="eyebrow">{domain.shortLabel} · {domain.report.papers.length} RECORDS</p>
+              <h2>{domain.label}</h2>
+              <p>{domain.description}</p>
+            </div>
+          </div>
+          <div class="domain-directory__meta">
+            <span>检索截止 <strong>{formatDate(domain.report.meta.retrievalDate)}</strong></span>
+            <span>{domain.report.categories.length} 个二级分类</span>
+          </div>
+          <div class="domain-directory__actions">
+            <a class="button button--primary button--small" href={`${base}${domain.landingPath}`}>
+              <BookOpen size={15} strokeWidth={1.8} aria-hidden="true" />
+              <span>专题总览</span>
+            </a>
+            <a class="text-link" href={`${base}${domain.reportPath}`}>
+              <span>阅读全文</span>
+              <ArrowUpRight size={15} strokeWidth={1.8} aria-hidden="true" />
+            </a>
+          </div>
+          <details class="category-directory">
+            <summary><span>展开二级分类</span><ChevronDown size={16} strokeWidth={1.8} aria-hidden="true" /></summary>
+            <div class="category-directory__list">
+              {domain.report.categories.map((category, categoryIndex) => (
+                <a href={`${base}${domain.reportPath}#${category.id}`}>
+                  <span>{String(categoryIndex + 1).padStart(2, '0')}</span>
+                  <span>{category.title}</span>
+                  <strong>{category.count}</strong>
+                  <ArrowUpRight size={14} strokeWidth={1.8} aria-hidden="true" />
+                </a>
+              ))}
+            </div>
+          </details>
+        </article>
+      ))}
+
+      <article class="domain-directory__legacy">
+        <div>
+          <p class="eyebrow">LLM / AGENT · SUBREPORT</p>
+          <h2>{legacyReport.label}</h2>
+          <p>保留原有 npj Digital Medicine 单刊报告及全部深链接，作为医疗 LLM / Agent 年度体系中的专题子报告。</p>
+        </div>
+        <a class="text-link" href={`${base}${legacyReport.landingPath}`}>
+          <span>打开子报告</span>
+          <ArrowUpRight size={15} strokeWidth={1.8} aria-hidden="true" />
+        </a>
+      </article>
+    </div>
+  </section>
+</Layout>

@@ -1,0 +1,52 @@
+---
+import { ArrowUpRight, CalendarDays } from 'lucide-astro';
+import Layout from '../../../layouts/Layout.astro';
+import { monthlyEntriesFor, monthlyPeriods } from '../../../lib/monthly-reports';
+import { reportDomainMap } from '../../../lib/report-catalog';
+
+export function getStaticPaths() {
+  return monthlyPeriods.map((period) => ({ params: { period }, props: { period } }));
+}
+
+const { period } = Astro.props;
+const entries = monthlyEntriesFor(period);
+const base = import.meta.env.BASE_URL;
+const monthLabel = period.replace('-', ' 年 ') + ' 月';
+---
+
+<Layout
+  title={`${monthLabel} · 月度报告阅读 · AI 医疗前沿`}
+  description={`${monthLabel} AI 医疗月度报告目录。`}
+  active="monthly"
+>
+  <section class="page-intro-band">
+    <div class="container page-intro">
+      <div>
+        <p class="eyebrow">MONTHLY REPORT · {period}</p>
+        <h1>{monthLabel}</h1>
+        <p>选择已发布的领域报告，继续进入该报告的二级分类和全文。</p>
+      </div>
+      <div class="page-intro__stats">
+        <span><strong>{entries.length}</strong>已发布领域</span>
+        <span><strong>{entries.reduce((total, entry) => total + entry.report.papers.length, 0)}</strong>来源记录</span>
+      </div>
+    </div>
+  </section>
+  <section class="section-band section-band--compact">
+    <div class="container monthly-period-directory">
+      {entries.map((entry) => {
+        const domain = reportDomainMap.get(entry.domainId);
+        return domain ? (
+          <a class="report-directory__item" href={`${base}monthly/${period}/${entry.domainId}/`}>
+            <span class="report-directory__number"><CalendarDays size={17} strokeWidth={1.8} aria-hidden="true" /></span>
+            <span>
+              <strong>{domain.label}</strong>
+              <small>{entry.report.papers.length} 条记录 · {entry.report.categories.length} 个二级分类</small>
+            </span>
+            <ArrowUpRight size={17} strokeWidth={1.7} aria-hidden="true" />
+          </a>
+        ) : null;
+      })}
+    </div>
+  </section>
+</Layout>

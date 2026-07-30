@@ -1,0 +1,62 @@
+---
+import { ArrowUpRight, Search } from 'lucide-astro';
+import Layout from '../../../layouts/Layout.astro';
+import { monthlyReports } from '../../../lib/monthly-reports';
+import { reportDomainMap, type ReportDomainId } from '../../../lib/report-catalog';
+
+export function getStaticPaths() {
+  return monthlyReports.map((entry) => ({
+    params: { period: entry.period, domain: entry.domainId },
+    props: { entry }
+  }));
+}
+
+const { entry } = Astro.props;
+const domain = reportDomainMap.get(entry.domainId as ReportDomainId);
+const base = import.meta.env.BASE_URL;
+const tocSections = entry.report.sections.filter((section) => section.title !== '一图速览：分布' && section.title !== '一图速览：文献分布' && section.title !== '一图速览：核心相关文献分类分布');
+const monthLabel = entry.period.replace('-', ' 年 ') + ' 月';
+---
+
+<Layout
+  title={`${monthLabel} · ${domain?.label ?? '月度报告'}`}
+  description={`${monthLabel}${domain?.label ?? 'AI 医疗'}月度文献追踪报告。`}
+  active="monthly"
+  reportLabel={`${monthLabel} · ${domain?.label ?? 'AI 医疗'}月度报告`}
+  reportDate={entry.report.meta.retrievalDate}
+>
+  <section class="report-band">
+    <div class="container report-tools">
+      <span class="eyebrow">MONTHLY REPORT · {entry.period} · {entry.report.papers.length} RECORDS</span>
+      <a class="button button--secondary button--small" href={`${base}search/?domain=${entry.domainId}&month=${entry.period}`}>
+        <Search size={15} strokeWidth={1.8} aria-hidden="true" />
+        <span>检索本月文献</span>
+      </a>
+    </div>
+  </section>
+  <section class="section-band section-band--compact">
+    <div class="container report-layout">
+      <aside class="report-toc" aria-label="月度报告目录">
+        <div class="toc-title">目录</div>
+        <nav>
+          {tocSections.map((section) => (
+            <a class:list={['toc-link', { 'toc-link--category': section.isCategory }]} href={`#${section.id}`}>
+              <span>{section.title}</span>
+              {section.count && <strong>{section.count}</strong>}
+            </a>
+          ))}
+        </nav>
+      </aside>
+      <article class="report-document">
+        <p class="eyebrow"><a href={`${base}monthly/`}>月度报告</a> / {domain?.label}</p>
+        <h1>{entry.report.meta.title}</h1>
+        <p class="report-document__lede">{monthLabel}独立报告，检索截止 {entry.report.meta.retrievalDate}。</p>
+        <div class="report-html" set:html={entry.report.html} />
+        <a class="text-link report-back-link" href={`${base}monthly/`}>
+          <span>返回月度报告目录</span>
+          <ArrowUpRight size={15} strokeWidth={1.8} aria-hidden="true" />
+        </a>
+      </article>
+    </div>
+  </section>
+</Layout>
