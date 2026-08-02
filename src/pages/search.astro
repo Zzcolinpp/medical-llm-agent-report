@@ -17,7 +17,7 @@ const domainCounts = reportDomains.map((domain) => ({ label: domain.label, count
       <div>
         <p class="eyebrow">GLOBAL LITERATURE INDEX · {catalogStats.uniqueRecords} UNIQUE RECORDS</p>
         <h1>文献检索</h1>
-        <p>跨三大领域按关键词、二级分类、范围、时间和文章类型定位论文，再返回对应年度报告的原文上下文。</p>
+        <p>跨三大领域按关键词、期刊、二级分类、范围、年月和文章类型定位论文，再返回对应年度报告的原文上下文。</p>
       </div>
       <div class="page-intro__stats">
         {domainCounts.map((item) => <span><strong>{item.count}</strong>{item.label}</span>)}

@@ -11,6 +11,7 @@ interface Props {
 const { papers, domains, base } = Astro.props;
 const years = [...new Set(papers.map((paper) => paper.date.slice(0, 4)).filter(Boolean))].sort().reverse();
 const months = [...new Set(papers.map((paper) => paper.date.slice(0, 7)).filter(Boolean))].sort().reverse();
+const journals = [...new Set(papers.map((paper) => paper.journal).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'zh-CN'));
 const articleTypes = [...new Set(papers.map((paper) => paper.articleType).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'zh-CN'));
 const serializedPapers = JSON.stringify(papers.map((paper) => ({
   titleZh: paper.titleZh,
@@ -65,17 +66,22 @@ const serializedPapers = JSON.stringify(papers.map((paper) => ({
       </select>
     </label>
     <label class="select-field">
-      <span>年份</span>
-      <select id="global-paper-year">
-        <option value="">全部年份</option>
-        {years.map((year) => <option value={year}>{year}</option>)}
+      <span>期刊</span>
+      <select id="global-paper-journal">
+        <option value="">全部期刊</option>
+        {journals.map((journal) => <option value={journal}>{journal}</option>)}
       </select>
     </label>
     <label class="select-field">
-      <span>月份</span>
-      <select id="global-paper-month">
-        <option value="">全部月份</option>
-        {months.map((month) => <option value={month}>{month}</option>)}
+      <span>年月</span>
+      <select id="global-paper-period">
+        <option value="">全部年月</option>
+        <optgroup label="年份">
+          {years.map((year) => <option value={year}>{year}（全年）</option>)}
+        </optgroup>
+        <optgroup label="月份">
+          {months.map((month) => <option value={month}>{month}</option>)}
+        </optgroup>
       </select>
     </label>
     <label class="select-field">
@@ -152,7 +158,7 @@ const serializedPapers = JSON.stringify(papers.map((paper) => ({
     scope: string;
     memberships: Membership[];
   };
-  type State = { q: string; domain: string; category: string; scope: string; year: string; month: string; type: string; sort: string; page: number };
+  type State = { q: string; domain: string; category: string; scope: string; journal: string; year: string; month: string; type: string; sort: string; page: number };
 
   const explorer = document.querySelector<HTMLElement>('[data-global-explorer]');
   if (explorer) {
@@ -163,8 +169,8 @@ const serializedPapers = JSON.stringify(papers.map((paper) => ({
     const domainSelect = explorer.querySelector<HTMLSelectElement>('#global-paper-domain');
     const categorySelect = explorer.querySelector<HTMLSelectElement>('#global-paper-category');
     const scopeSelect = explorer.querySelector<HTMLSelectElement>('#global-paper-scope');
-    const yearSelect = explorer.querySelector<HTMLSelectElement>('#global-paper-year');
-    const monthSelect = explorer.querySelector<HTMLSelectElement>('#global-paper-month');
+    const journalSelect = explorer.querySelector<HTMLSelectElement>('#global-paper-journal');
+    const periodSelect = explorer.querySelector<HTMLSelectElement>('#global-paper-period');
     const typeSelect = explorer.querySelector<HTMLSelectElement>('#global-paper-type');
     const sortSelect = explorer.querySelector<HTMLSelectElement>('#global-paper-sort');
     const clearButton = explorer.querySelector<HTMLButtonElement>('#global-clear-filters');
@@ -185,6 +191,7 @@ const serializedPapers = JSON.stringify(papers.map((paper) => ({
         domain: params.get('domain') || '',
         category: params.get('category') || '',
         scope: params.get('scope') || '',
+        journal: params.get('journal') || '',
         year: params.get('year') || '',
         month: params.get('month') || '',
         type: params.get('type') || '',
@@ -197,18 +204,22 @@ const serializedPapers = JSON.stringify(papers.map((paper) => ({
       if (domainSelect) domainSelect.value = state.domain;
       if (categorySelect) categorySelect.value = state.category;
       if (scopeSelect) scopeSelect.value = state.scope;
-      if (yearSelect) yearSelect.value = state.year;
-      if (monthSelect) monthSelect.value = state.month;
+      if (journalSelect) journalSelect.value = state.journal;
+      if (periodSelect) periodSelect.value = state.month || state.year;
       if (typeSelect) typeSelect.value = state.type;
       if (sortSelect) sortSelect.value = state.sort;
+    };
+    const readPeriod = () => {
+      const value = periodSelect?.value || '';
+      return value.includes('-') ? { year: '', month: value } : { year: value, month: '' };
     };
     const getState = (): State => ({
       q: queryInput?.value || '',
       domain: domainSelect?.value || '',
       category: categorySelect?.value || '',
       scope: scopeSelect?.value || '',
-      year: yearSelect?.value || '',
-      month: monthSelect?.value || '',
+      journal: journalSelect?.value || '',
+      ...readPeriod(),
       type: typeSelect?.value || '',
       sort: sortSelect?.value || 'date',
       page: Number(explorer.dataset.page || '1')
@@ -292,11 +303,13 @@ const serializedPapers = JSON.stringify(papers.map((paper) => ({
         const matchesDomain = !state.domain || paper.memberships.some((membership) => membership.domainId === state.domain);
         const matchesCategory = !state.category || paper.memberships.some((membership) => membership.domainId === categoryParts[0] && membership.categoryId === categoryParts[1]);
         const matchesScope = !state.scope || paper.memberships.some((membership) => membership.scope === state.scope);
+        const matchesJournal = !state.journal || paper.journal === state.journal;
         const matchesType = !state.type || paper.articleType === state.type || paper.memberships.some((membership) => membership.articleType === state.type);
         return (!query || normalize(paperSearchText(paper)).includes(query))
           && matchesDomain
           && matchesCategory
           && matchesScope
+          && matchesJournal
           && (!state.year || paper.date.slice(0, 4) === state.year)
           && (!state.month || paper.date.slice(0, 7) === state.month)
           && matchesType;
@@ -318,10 +331,10 @@ const serializedPapers = JSON.stringify(papers.map((paper) => ({
     const initialState = stateFromUrl();
     setControls(initialState);
     explorer.dataset.page = String(initialState.page);
-    [queryInput, domainSelect, categorySelect, scopeSelect, yearSelect, monthSelect, typeSelect, sortSelect]
+    [queryInput, domainSelect, categorySelect, scopeSelect, journalSelect, periodSelect, typeSelect, sortSelect]
       .forEach((control) => control?.addEventListener('input', () => render({ page: 1 })));
     clearButton?.addEventListener('click', () => {
-      setControls({ q: '', domain: '', category: '', scope: '', year: '', month: '', type: '', sort: 'date', page: 1 });
+      setControls({ q: '', domain: '', category: '', scope: '', journal: '', year: '', month: '', type: '', sort: 'date', page: 1 });
       render({ page: 1 });
     });
     previousButton?.addEventListener('click', () => render({ page: Math.max(1, Number(explorer.dataset.page || '1') - 1) }));
