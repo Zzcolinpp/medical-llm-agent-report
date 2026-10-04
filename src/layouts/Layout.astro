@@ -1,11 +1,12 @@
 ---
-import { BookOpen, CalendarDays, Search } from 'lucide-astro';
+import { BookOpen, Search } from 'lucide-astro';
 import '../styles/global.css';
+import '../styles/portal.css';
 
 interface Props {
   title: string;
   description?: string;
-  active?: 'home' | 'annual' | 'monthly' | 'search' | 'report' | 'literature' | 'vlm' | 'vlm-report' | 'vlm-literature' | 'surgery' | 'surgery-report' | 'surgery-literature' | 'medical-agent' | 'medical-agent-report' | 'medical-agent-literature';
+  active?: 'home' | 'topics' | 'library' | 'annual' | 'monthly' | 'search' | 'report' | 'literature' | 'vlm' | 'vlm-report' | 'vlm-literature' | 'surgery' | 'surgery-report' | 'surgery-literature' | 'medical-agent' | 'medical-agent-report' | 'medical-agent-literature';
   reportLabel?: string;
   reportDate?: string;
   brandKicker?: string;
@@ -14,9 +15,9 @@ interface Props {
 
 const {
   title,
-  description = 'AI 医疗领域前沿文献追踪平台，提供年度报告、月度报告与跨领域文献检索。',
+  description = '按疾病与诊疗、数字医学与 AI 组织的医学研究报告门户。',
   active = 'home',
-  reportLabel = 'AI 医疗前沿文献追踪',
+  reportLabel = '医学前沿追踪',
   reportDate = '2026-07-17',
   brandKicker: _brandKicker,
   brandSubline: _brandSubline
@@ -32,7 +33,7 @@ const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site).toString(
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width" />
-    <meta name="theme-color" content="#f3f5f2" />
+    <meta name="theme-color" content="#102544" />
     <meta name="site-base" content={base} />
     <meta name="description" content={description} />
     <link rel="icon" href={`${base}favicon.svg`} type="image/svg+xml" />
@@ -43,22 +44,16 @@ const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site).toString(
     <a class="skip-link" href="#main-content">跳到主要内容</a>
     <header class="site-header">
       <div class="site-header__inner">
-        <a class="brand" href={base} aria-label="AI 医疗前沿首页">
-          <span class="brand__mark">AI</span>
-          <span class="brand__text">AI 医疗前沿<br /><small>FRONTIER LITERATURE TRACKER</small></span>
+        <a class="brand" href={base} aria-label="医学前沿追踪首页">
+          <span class="brand__mark">MF</span>
+          <span class="brand__text">医学前沿追踪<br /><small>MEDICAL FRONTIERS</small></span>
         </a>
         <nav class="site-nav" aria-label="主导航">
           <a class:list={['nav-link', { active: active === 'home' }]} href={base}>
             <span>总览</span>
           </a>
-          <a class:list={['nav-link', { active: annualActive }]} href={`${base}annual/`}>
-            <BookOpen size={16} strokeWidth={1.8} aria-hidden="true" />
-            <span>年度报告阅读</span>
-          </a>
-          <a class:list={['nav-link', { active: active === 'monthly' }]} href={`${base}monthly/`}>
-            <CalendarDays size={16} strokeWidth={1.8} aria-hidden="true" />
-            <span>月度报告阅读</span>
-          </a>
+          <a class:list={['nav-link', { active: active === 'topics' || ['vlm', 'surgery', 'medical-agent'].includes(active) }]} href={`${base}topics/`}><span>医学主题</span></a>
+          <a class:list={['nav-link', { active: active === 'library' || annualActive || active === 'monthly' }]} href={`${base}library/`}><BookOpen size={16} aria-hidden="true" /><span>报告库</span></a>
           <a class:list={['nav-link', { active: searchActive }]} href={`${base}search/`}>
             <Search size={16} strokeWidth={1.8} aria-hidden="true" />
             <span>文献检索</span>

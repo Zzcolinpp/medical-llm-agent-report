@@ -15,7 +15,7 @@ const monthLabel = period.replace('-', ' 年 ') + ' 月';
 ---
 
 <Layout
-  title={`${monthLabel} · 月度报告阅读 · AI 医疗前沿`}
+  title={`${monthLabel} · 月度报告阅读 · 医学前沿追踪`}
   description={`${monthLabel} AI 医疗月度报告目录。`}
   reportDate={entries.map((entry) => entry.report.meta.retrievalDate).sort().at(-1)}
   active="monthly"

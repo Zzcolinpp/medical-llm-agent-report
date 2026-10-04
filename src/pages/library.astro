@@ -1,0 +1,6 @@
+---
+import Layout from '../layouts/Layout.astro';
+import ReportLibrary from '../components/ReportLibrary.astro';
+import { libraryDate, reportKinds, reportLibrary } from '../lib/report-library';
+---
+<Layout title="报告库 · 医学前沿追踪" active="library" reportDate={libraryDate}><section class="container portal-page"><p class="eyebrow">REPORT LIBRARY</p><h1>报告库</h1><p class="portal-lede">按年度报告、月度报告、专题报告、作者追踪四个方面组织，并支持医学主题筛选。保留原始全文、追踪窗口和完成状态。</p><nav class="report-kind-nav" aria-label="报告分类">{reportKinds.map(kind => <a href={`?kind=${encodeURIComponent(kind)}`}><strong>{kind}</strong><span>{reportLibrary.filter(r => r.kind === kind).length} 份报告</span></a>)}</nav><ReportLibrary /></section></Layout>

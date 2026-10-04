@@ -1,0 +1,51 @@
+---
+import { reportLibrary, medicalTopics, reportKinds } from '../lib/report-library';
+const { compact = false } = Astro.props;
+const base = import.meta.env.BASE_URL;
+const entries = compact ? reportLibrary.slice(0, 6) : reportLibrary;
+---
+<div class="report-library" data-library>
+  {!compact && <div class="library-controls">
+    <label>查找报告<input type="search" name="q" placeholder="搜索标题、主题或报告窗口" aria-label="查找报告" /></label>
+    <label>医学主题<select name="topic"><option value="">全部主题</option>{medicalTopics.map(t => <option value={t.id}>{t.label}</option>)}</select></label>
+    <label>报告类型<select name="kind"><option value="">全部类型</option>{reportKinds.map(k => <option value={k}>{k}</option>)}</select></label>
+    <button type="button" data-reset>重置</button>
+  </div>}
+  {!compact && <p class="library-count" aria-live="polite" data-count>共 {entries.length} 份报告</p>}
+  <div class="report-rows">{entries.map(r => {
+    const topic = medicalTopics.find(t => t.id === r.topic) ?? { group: '数字医学与 AI', label: '数字医学综合' };
+    return <a class="report-row" href={`${base}${r.href}`} data-report data-topic={r.topic} data-kind={r.kind} data-text={`${r.title} ${topic.label} ${r.window}`}>
+      <span class="report-row__date">{r.date}<small>检索截止</small></span>
+      <span class="report-row__body"><span class="report-row__tags">{topic.group} <b>{r.kind}</b></span><strong>{r.title}</strong><small>{r.window}</small></span>
+      <span class="report-row__arrow" aria-hidden="true">↗</span>
+    </a>;
+  })}</div>
+  {!compact && <p data-empty hidden class="library-empty">没有符合条件的报告。可调整主题或搜索词。</p>}
+</div>
+<script>
+  const library = document.querySelector<HTMLElement>('[data-library]');
+  if (library?.querySelector('input')) {
+    const input = library.querySelector<HTMLInputElement>('input')!;
+    const topic = library.querySelector<HTMLSelectElement>('[name=topic]')!;
+    const kind = library.querySelector<HTMLSelectElement>('[name=kind]')!;
+    const rows = [...library.querySelectorAll<HTMLElement>('[data-report]')];
+    const params = new URLSearchParams(location.search);
+    input.value = params.get('q') || '';
+    topic.value = params.get('topic') || '';
+    kind.value = params.get('kind') || '';
+    function filter() {
+      const q = input.value.trim().toLocaleLowerCase();
+      library!.querySelector('[data-empty]')!.textContent = kind.value === '作者追踪' ? '尚未收录作者追踪报告。' : '没有符合条件的报告。可调整主题或搜索词。';
+      let count = 0;
+      rows.forEach(row => {
+        row.hidden = !((!topic.value || row.dataset.topic === topic.value) && (!kind.value || row.dataset.kind === kind.value) && row.dataset.text!.toLocaleLowerCase().includes(q));
+        if (!row.hidden) count++;
+      });
+      library!.querySelector('[data-count]')!.textContent = `共 ${count} 份报告`;
+      library!.querySelector<HTMLElement>('[data-empty]')!.hidden = count !== 0;
+    }
+    [input, topic, kind].forEach(el => el.addEventListener('input', filter));
+    library.querySelector('[data-reset]')!.addEventListener('click', () => { input.value = ''; topic.value = ''; kind.value = ''; filter(); });
+    filter();
+  }
+</script>

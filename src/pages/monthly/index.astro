@@ -10,7 +10,7 @@ const monthLabel = (period: string) => period.replace('-', ' 年 ') + ' 月';
 ---
 
 <Layout
-  title="月度报告阅读 · AI 医疗前沿"
+  title="月度报告阅读 · 医学前沿追踪"
   description="按月份阅读 AI 医疗三大领域的独立文献追踪报告。"
   reportDate={monthlyReports.map((entry) => entry.report.meta.retrievalDate).sort().at(-1)}
   active="monthly"

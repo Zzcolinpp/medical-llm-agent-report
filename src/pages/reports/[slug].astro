@@ -9,7 +9,7 @@ const { entry } = Astro.props;
 const base = import.meta.env.BASE_URL;
 ---
 
-<Layout title={`${entry.label} · AI 医疗前沿`} active={entry.collection === 'annual' ? 'annual' : 'monthly'} reportLabel={entry.label} reportDate={entry.report.meta.retrievalDate}>
+<Layout title={`${entry.label} · 医学前沿追踪`} active={entry.collection === 'annual' ? 'annual' : 'monthly'} reportLabel={entry.label} reportDate={entry.report.meta.retrievalDate}>
   <section class="section-band section-band--compact">
     <div class="container report-layout">
       <aside class="report-toc" aria-label="报告目录">
