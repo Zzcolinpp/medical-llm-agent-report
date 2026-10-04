@@ -38,11 +38,12 @@ function ids(text:string, links:string[]) {
 }
 function extraRecords(markdown:string, topic:string, file:string):Partial<Paper>[] {
   const root=unified().use(remarkParse).use(remarkGfm).parse(markdown.replace(/^---\n[\s\S]*?\n---\n/,'')) as Root;
+  const categoryHeadings=root.children.filter((n):n is Heading=>n.type==='heading'&&n.depth===3).map(n=>toString(n));
   let section='',category='';const out:Partial<Paper>[]=[];
   root.children.forEach((node,i)=>{
     if(node.type!=='heading')return;
     const title=toString(node);
-    if(node.depth===2)section=title;
+    if(node.depth===2){section=title;category='';}
     if(node.depth===3)category=title;
     const lung=topic==='lung-cancer' && node.depth===4 && /^PMID\d+[｜]/.test(title);
     const prospective=file.includes('prospective') && node.depth===3 && /^(?:\d+|[ABS]\d+)\./.test(title);
@@ -53,19 +54,21 @@ function extraRecords(markdown:string, topic:string, file:string):Partial<Paper>
     if(!identifiers.doi&&!identifiers.pmid)throw new Error(`Missing identifier: ${file} ${title}`);
     const englishNode=body.find(n=>n.type==='paragraph' && ['emphasis','strong'].includes(n.children[0]?.type??''));
     const english=englishNode?toString(englishNode):'';
-    const metadata=body.find(n=>n.type==='paragraph' && /20\d{2}-\d{2}-\d{2}/.test(toString(n)));
+    const metadata=body.find(n=>n.type==='paragraph' && (lung?/主分类/.test(toString(n)):/20\d{2}-\d{2}-\d{2}/.test(toString(n))));
     const meta=metadata?toString(metadata):'';
     const journal=prospective ? (/姊妹刊/.test(section)?(text.match(/npj Digital Surgery|npj Digital Public Health/)?.[0]??''):'npj Digital Medicine') : meta.match(/^([^；·\n]+)[；·]/)?.[1]?.trim()??'';
     const date=meta.match(/20\d{2}-\d{2}-\d{2}/)?.[0]??'';
     const cleanTitle=title.replace(/^PMID\d+[｜]\s*|^(?:B?\d+)\.\s*/,'');
     const summary=body.filter(n=>n!==englishNode && n!==metadata).map(n=>toString(n)).filter(s=>s&&!s.startsWith('作者：')&&!s.startsWith('PubMed')&&!s.startsWith('<a id=')).join('\n\n');
     const pending=/待核验|pending|类型未充分核实|未明确/.test(section+' '+text) || /^B\d+\./.test(title);
-    out.push({...identifiers,titleZh:cleanTitle,titleEn:english,journal,date,summary,category:lung?category:section,scope:/边缘|边界/.test(section)?'edge':'core',articleType:pending?'待核验':/更正/.test(section)?'更正记录':'',slug:lung?title.match(/^PMID\d+/)![0]:'',sourceUrl:links.find(u=>/^https?:/.test(u))??''});
+    const declaredCategory=meta.match(/主分类\s*([^；。\s]+)/)?.[1]??'';
+    const lungCategory=declaredCategory.startsWith('CROSS_')?'跨癌种预防与借鉴':categoryHeadings.find(h=>h.startsWith(declaredCategory+'｜'))||(category||section);
+    out.push({...identifiers,titleZh:cleanTitle,titleEn:english,journal,date,summary,category:lung?lungCategory:section,scope:/边缘|边界/.test(section)?'edge':'core',articleType:pending?'待核验':/更正/.test(section)?'更正记录':'',slug:lung?title.match(/^PMID\d+/)![0]:'',sourceUrl:links.find(u=>/^https?:/.test(u))??''});
   });
   let tableSection='',tableCategory='';
   for(const node of root.children){
     if(node.type==='heading'){
-      if(node.depth===2)tableSection=toString(node);
+      if(node.depth===2){tableSection=toString(node);tableCategory='';}
       if(node.depth===3)tableCategory=toString(node);
     }
     if(node.type==='table' && !/排除|检索策略|覆盖核对/.test(tableSection)){

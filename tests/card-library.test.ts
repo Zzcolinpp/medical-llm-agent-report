@@ -41,3 +41,16 @@ test('invalid changes and unauthenticated or foreign-origin writes are rejected'
  const other=library.papers.find(p=>p.id!==paper.id&&p.doi)!;assert.equal((await handleApi(put({revision:0,fields:{...fields(),doi:other.doi}}),env))!.status,409);
  assert.equal(sqlite.prepare('SELECT COUNT(*) AS n FROM card_edits').get()!.n,0);sqlite.close();
 });
+
+
+test('lung-cancer index uses declared topics instead of a preceding suggestion heading',()=>{
+ const lung=library.papers.filter(p=>p.topics.includes('lung-cancer'));
+ assert.ok(lung.every(p=>p.categories.every(c=>!c.startsWith('建议'))));
+ const caspase=lung.find(p=>p.pmid==='42600019')!;
+ assert.ok(caspase.categories.some(c=>c.startsWith('LC03｜')));
+ assert.equal(caspase.journal,'Science Advances');
+ const masai=lung.find(p=>p.pmid==='41620232')!;
+ assert.ok(masai.categories.includes('跨癌种预防与借鉴'));
+ assert.equal(masai.journal,'The Lancet');
+ assert.notEqual(masai.verification,'来源已收录');
+});

@@ -5,4 +5,4 @@ import library from '../../generated/card-library.json';
 export function getStaticPaths(){return library.topics.map(topic=>({params:{topic:topic.id},props:{topic}}));}
 const {topic}=Astro.props;
 ---
-<Layout title={`${topic.label} · 医学前沿追踪`} active="topics"><section class="container card-page"><p class="topic-list-intro">{topic.description}</p><CardWorkbench mode="topic" topic={topic.id} title={topic.label} /></section></Layout>
+<Layout title={`${topic.label} · 医学前沿追踪`} active="topics"><section class="container card-page"><CardWorkbench mode="topic" topic={topic.id} title={topic.label} description={topic.description} /></section></Layout>
