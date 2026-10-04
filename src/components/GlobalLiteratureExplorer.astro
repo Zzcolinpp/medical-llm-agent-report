@@ -158,7 +158,7 @@ const serializedPapers = JSON.stringify(papers.map((paper) => ({
     scope: string;
     memberships: Membership[];
   };
-  type State = { q: string; domain: string; category: string; scope: string; journal: string; year: string; month: string; type: string; sort: string; page: number };
+  type State = { report: string; q: string; domain: string; category: string; scope: string; journal: string; year: string; month: string; type: string; sort: string; page: number };
 
   const explorer = document.querySelector<HTMLElement>('[data-global-explorer]');
   if (explorer) {
@@ -187,6 +187,7 @@ const serializedPapers = JSON.stringify(papers.map((paper) => ({
     const stateFromUrl = (): State => {
       const params = new URLSearchParams(window.location.search);
       return {
+        report: params.get('report') || '',
         q: params.get('q') || '',
         domain: params.get('domain') || '',
         category: params.get('category') || '',
@@ -214,6 +215,7 @@ const serializedPapers = JSON.stringify(papers.map((paper) => ({
       return value.includes('-') ? { year: '', month: value } : { year: value, month: '' };
     };
     const getState = (): State => ({
+      report: stateFromUrl().report,
       q: queryInput?.value || '',
       domain: domainSelect?.value || '',
       category: categorySelect?.value || '',
@@ -252,7 +254,7 @@ const serializedPapers = JSON.stringify(papers.map((paper) => ({
       link.textContent = label;
       parent.appendChild(link);
     };
-    const renderPaper = (paper: CatalogPaper) => {
+    const renderPaper = (paper: CatalogPaper, state: State) => {
       const article = document.createElement('article');
       article.className = 'paper-card paper-result';
       const topline = appendText(article, 'div', '', 'paper-card__topline');
@@ -262,7 +264,7 @@ const serializedPapers = JSON.stringify(papers.map((paper) => ({
       appendText(topline, 'span', paper.journal);
       appendText(topline, 'span', paper.articleType);
       const heading = document.createElement('h2');
-      const primary = paper.memberships[0];
+      const primary = paper.memberships.find((membership) => (!state.report || membership.reportPath === state.report) && (!state.domain || membership.domainId === state.domain) && (!state.category || `${membership.domainId}::${membership.categoryId}` === state.category) && (!state.scope || membership.scope === state.scope))!;
       const reportLink = document.createElement('a');
       reportLink.href = `${base}${primary.reportPath}#${primary.slug}`;
       reportLink.textContent = paper.titleZh;
@@ -270,11 +272,13 @@ const serializedPapers = JSON.stringify(papers.map((paper) => ({
       article.appendChild(heading);
       if (paper.titleEn) appendText(article, 'p', paper.titleEn, 'paper-card__english');
       appendText(article, 'p', paper.summary, 'paper-card__summary');
+      if (paper.takeaway) {
       const takeaway = appendText(article, 'p', '', 'paper-card__takeaway');
       const takeawayLabel = document.createElement('strong');
       takeawayLabel.textContent = '要点';
       takeaway.appendChild(takeawayLabel);
       takeaway.appendChild(document.createTextNode(paper.takeaway));
+      }
       const memberships = appendText(article, 'div', '', 'paper-card__memberships');
       appendText(memberships, 'span', '归属');
       paper.memberships.forEach((membership) => {
@@ -300,15 +304,15 @@ const serializedPapers = JSON.stringify(papers.map((paper) => ({
       const query = normalize(state.q);
       const categoryParts = state.category.split('::');
       const filtered = sortedPapers(papers.filter((paper) => {
-        const matchesDomain = !state.domain || paper.memberships.some((membership) => membership.domainId === state.domain);
-        const matchesCategory = !state.category || paper.memberships.some((membership) => membership.domainId === categoryParts[0] && membership.categoryId === categoryParts[1]);
-        const matchesScope = !state.scope || paper.memberships.some((membership) => membership.scope === state.scope);
+        const matchesMembership = paper.memberships.some((membership) =>
+          (!state.domain || membership.domainId === state.domain)
+          && (!state.report || membership.reportPath === state.report)
+          && (!state.category || (membership.domainId === categoryParts[0] && membership.categoryId === categoryParts[1]))
+          && (!state.scope || membership.scope === state.scope));
         const matchesJournal = !state.journal || paper.journal === state.journal;
         const matchesType = !state.type || paper.articleType === state.type || paper.memberships.some((membership) => membership.articleType === state.type);
         return (!query || normalize(paperSearchText(paper)).includes(query))
-          && matchesDomain
-          && matchesCategory
-          && matchesScope
+          && matchesMembership
           && matchesJournal
           && (!state.year || paper.date.slice(0, 4) === state.year)
           && (!state.month || paper.date.slice(0, 7) === state.month)
@@ -318,9 +322,9 @@ const serializedPapers = JSON.stringify(papers.map((paper) => ({
       const page = Math.min(Math.max(1, state.page), totalPages);
       explorer.dataset.page = String(page);
       if (resultsContainer) {
-        resultsContainer.replaceChildren(...filtered.slice((page - 1) * pageSize, page * pageSize).map(renderPaper));
+        resultsContainer.replaceChildren(...filtered.slice((page - 1) * pageSize, page * pageSize).map((paper) => renderPaper(paper, state)));
       }
-      if (resultCount) resultCount.textContent = `显示 ${(filtered.length ? (page - 1) * pageSize + 1 : 0)}–${Math.min(page * pageSize, filtered.length)} / ${filtered.length} 篇`;
+      if (resultCount) resultCount.textContent = `${state.report ? '本报告 · ' : ''}显示 ${(filtered.length ? (page - 1) * pageSize + 1 : 0)}–${Math.min(page * pageSize, filtered.length)} / ${filtered.length} 篇`;
       if (emptyState) emptyState.hidden = filtered.length !== 0;
       if (pagination) pagination.hidden = totalPages <= 1 || filtered.length === 0;
       if (pageStatus) pageStatus.textContent = `${page} / ${totalPages}`;
@@ -334,8 +338,8 @@ const serializedPapers = JSON.stringify(papers.map((paper) => ({
     [queryInput, domainSelect, categorySelect, scopeSelect, journalSelect, periodSelect, typeSelect, sortSelect]
       .forEach((control) => control?.addEventListener('input', () => render({ page: 1 })));
     clearButton?.addEventListener('click', () => {
-      setControls({ q: '', domain: '', category: '', scope: '', journal: '', year: '', month: '', type: '', sort: 'date', page: 1 });
-      render({ page: 1 });
+      setControls({ report: '', q: '', domain: '', category: '', scope: '', journal: '', year: '', month: '', type: '', sort: 'date', page: 1 });
+      render({ report: '', page: 1 });
     });
     previousButton?.addEventListener('click', () => render({ page: Math.max(1, Number(explorer.dataset.page || '1') - 1) }));
     nextButton?.addEventListener('click', () => render({ page: Number(explorer.dataset.page || '1') + 1 }));

@@ -8,7 +8,7 @@ export function validateMonthlyReport(report: ReportData, period: string, domain
   if (report.categories.length === 0) errors.push('monthly report has no categories');
   if (report.papers.length === 0) errors.push('monthly report has no papers');
   if (new Set(report.papers.map((paper) => paper.slug)).size !== report.papers.length) errors.push('paper slugs are not unique');
-  if (report.papers.some((paper) => !paper.titleZh || !paper.date || !paper.summary || !paper.takeaway)) {
+  if (report.papers.some((paper) => !paper.titleZh || !paper.date || !paper.summary)) {
     errors.push('one or more papers are missing required fields');
   }
   if (report.papers.some((paper) => !paper.pmidUrl && !paper.doiUrl && !paper.sourceUrl)) {

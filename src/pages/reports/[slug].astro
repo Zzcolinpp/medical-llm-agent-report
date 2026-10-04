@@ -1,0 +1,27 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { supplementalReports } from '../../lib/supplemental-reports';
+
+export function getStaticPaths() {
+  return supplementalReports.map((entry) => ({ params: { slug: entry.slug }, props: { entry } }));
+}
+const { entry } = Astro.props;
+const base = import.meta.env.BASE_URL;
+---
+
+<Layout title={`${entry.label} · AI 医疗前沿`} active={entry.collection === 'annual' ? 'annual' : 'monthly'} reportLabel={entry.label} reportDate={entry.report.meta.retrievalDate}>
+  <section class="section-band section-band--compact">
+    <div class="container report-layout">
+      <aside class="report-toc" aria-label="报告目录">
+        <div class="toc-title">目录</div>
+        <nav>{entry.report.sections.map((section) => <a class="toc-link" href={`#${section.id}`}>{section.title}</a>)}</nav>
+      </aside>
+      <article class="report-document">
+        <p class="eyebrow"><a href={`${base}${entry.collection}/`}>{entry.collection === 'annual' ? '年度报告' : '月度与增量报告'}</a></p>
+        <h1>{entry.report.meta.title}</h1>
+        <p class="report-document__lede">{entry.report.meta.trackingWindow} · 原报告全文，保留证据层级与完成状态。报告引用的本地审计附件未随源文件提供。</p>
+        <div class="report-html" set:html={entry.report.html} />
+      </article>
+    </div>
+  </section>
+</Layout>

@@ -1,6 +1,7 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { buildReport, type ReportData } from '../src/lib/report-parser';
+import type { ReportData } from '../src/lib/report-parser';
+import { buildSourceReport } from '../src/lib/source-report-parser';
 import type { ReportDomainId } from '../src/lib/report-catalog-core';
 
 export interface DiskMonthlyReportEntry {
@@ -27,7 +28,7 @@ export function loadMonthlyReportsFromDisk(): DiskMonthlyReportEntry[] {
         period: match[2],
         domainId: match[1] as ReportDomainId,
         sourcePath,
-        report: buildReport(readFileSync(sourcePath, 'utf8'))
+        report: buildSourceReport(readFileSync(sourcePath, 'utf8'), true)
       };
     })
     .filter((entry): entry is DiskMonthlyReportEntry => Boolean(entry))

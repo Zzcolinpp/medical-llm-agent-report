@@ -28,9 +28,9 @@ const monthLabel = entry.period.replace('-', ' 年 ') + ' 月';
   <section class="report-band">
     <div class="container report-tools">
       <span class="eyebrow">MONTHLY REPORT · {entry.period} · {entry.report.papers.length} RECORDS</span>
-      <a class="button button--secondary button--small" href={`${base}search/?domain=${entry.domainId}&month=${entry.period}`}>
+      <a class="button button--secondary button--small" href={`${base}search/?report=monthly/${entry.period}/${entry.domainId}/`}>
         <Search size={15} strokeWidth={1.8} aria-hidden="true" />
-        <span>检索本月文献</span>
+        <span>检索本报告文献</span>
       </a>
     </div>
   </section>
@@ -50,7 +50,7 @@ const monthLabel = entry.period.replace('-', ' 年 ') + ' 月';
       <article class="report-document">
         <p class="eyebrow"><a href={`${base}monthly/`}>月度报告</a> / {domain?.label}</p>
         <h1>{entry.report.meta.title}</h1>
-        <p class="report-document__lede">{monthLabel}独立报告，检索截止 {entry.report.meta.retrievalDate}。</p>
+        <p class="report-document__lede">{monthLabel}归档月；固定窗口 {entry.report.meta.trackingWindow}，实际检索 {entry.report.meta.retrievalDate}。原报告为部分完成；本地审计附件未上传。</p>
         <div class="report-html" set:html={entry.report.html} />
         <a class="text-link report-back-link" href={`${base}monthly/`}>
           <span>返回月度报告目录</span>

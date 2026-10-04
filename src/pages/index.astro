@@ -1,11 +1,11 @@
 ---
 import { ArrowUpRight, BookOpen, CalendarDays, Search } from 'lucide-astro';
 import Layout from '../layouts/Layout.astro';
-import { catalogPapers, catalogStats, reportDomains } from '../lib/report-catalog';
+import { catalogPapers, catalogStats, reportDomains, latestReportDate } from '../lib/report-catalog';
 
 const base = import.meta.env.BASE_URL;
 const latestPapers = catalogPapers.slice(0, 8);
-const latestDate = reportDomains.map((domain) => domain.report.meta.retrievalDate).sort().at(-1) ?? '';
+const latestDate = latestReportDate;
 const formatDate = (value: string) => value.replaceAll('-', '.');
 const scopeLabel = (scope: string) => scope === 'edge' ? '边缘相关' : scope === 'sister' ? '姊妹刊' : '核心相关';
 ---
@@ -13,6 +13,7 @@ const scopeLabel = (scope: string) => scope === 'edge' ? '边缘相关' : scope 
 <Layout
   title="AI 医疗前沿 · 文献追踪"
   description="AI 医疗领域前沿文献追踪平台，提供三大领域年度报告、独立月度报告与跨领域文献检索。"
+  reportDate={latestReportDate}
   active="home"
 >
   <section class="hero-band">
@@ -115,7 +116,7 @@ const scopeLabel = (scope: string) => scope === 'edge' ? '边缘相关' : scope 
       <div>
         <p class="eyebrow">03 / MONTHLY READING</p>
         <h2 id="monthly-title">按月追踪正在发生的变化</h2>
-        <p>独立月报导入后，会按年月、领域和二级分类生成连续的阅读入口。</p>
+        <p>已收录两期三大领域月报，按报告截止月份归档；具体固定窗口与完成状态见报告。</p>
       </div>
       <a class="button button--secondary" href={`${base}monthly/`}>
         <CalendarDays size={17} strokeWidth={1.8} aria-hidden="true" />

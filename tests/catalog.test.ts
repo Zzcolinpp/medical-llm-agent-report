@@ -14,6 +14,28 @@ test('builds a three-domain de-duplicated catalogue', () => {
   assert.deepEqual(validateCatalog(catalogDomains), []);
 });
 
-test('does not manufacture monthly reports without imported snapshots', () => {
-  assert.deepEqual(loadMonthlyReportsFromDisk(), []);
+test('indexes supplied monthly reports without counting pending journal records', () => {
+  const reports = loadMonthlyReportsFromDisk();
+  assert.equal(reports.length, 6);
+  const expected = new Map([
+    ['vlm/2026-08', [32, 4]], ['vlm/2026-09', [25, 4]],
+    ['surgery/2026-08', [70, 44]], ['surgery/2026-09', [34, 39]],
+    ['medical-agent/2026-08', [129, 308]], ['medical-agent/2026-09', [109, 338]]
+  ]);
+  for (const entry of reports) {
+    const report = entry.report;
+    assert.deepEqual([report.papers.filter((paper) => !paper.isAppendix).length, report.papers.filter((paper) => paper.isAppendix).length], expected.get(`${entry.domainId}/${entry.period}`));
+    assert.equal(report.meta.retrievalDate, '2026-10-04');
+    assert.ok(report.meta.trackingWindow.endsWith(entry.period + '-14'));
+    assert.ok(report.papers.every((paper) => report.html.includes(`id="${paper.slug}"`)));
+    assert.ok(report.papers.every((paper) => !/<a id=/.test(paper.summary)));
+    assert.ok(!/href="(?:\/Users\/|[^"#]*附件\/)/.test(report.html));
+  }
+});
+
+test('de-duplicates annual and monthly records while preserving report memberships', () => {
+  const monthlyDomains = loadMonthlyReportsFromDisk().map((entry) => ({ ...catalogDomains.find((domain) => domain.id === entry.domainId)!, reportPath: `monthly/${entry.period}/${entry.domainId}/`, report: entry.report }));
+  const papers = buildCatalogPapers([...catalogDomains, ...monthlyDomains]);
+  assert.equal(new Set(papers.map((paper) => paper.key)).size, papers.length);
+  assert.ok(papers.some((paper) => paper.memberships.some((membership) => membership.reportPath.startsWith('monthly/')) && paper.memberships.some((membership) => !membership.reportPath.startsWith('monthly/'))));
 });

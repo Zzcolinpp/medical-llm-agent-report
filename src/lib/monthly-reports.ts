@@ -1,4 +1,5 @@
-import { buildReport, type ReportData } from './report-parser';
+import type { ReportData } from './report-parser';
+import { buildSourceReport } from './source-report-parser';
 import type { ReportDomainId } from './report-catalog';
 
 export interface MonthlyReportEntry {
@@ -21,7 +22,7 @@ function parseMonthlySource(sourcePath: string, markdown: string): MonthlyReport
     period: match[2],
     domainId: match[1] as ReportDomainId,
     sourcePath,
-    report: buildReport(markdown)
+    report: buildSourceReport(markdown, true)
   };
 }
 

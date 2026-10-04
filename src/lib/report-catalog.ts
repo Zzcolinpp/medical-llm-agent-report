@@ -2,6 +2,7 @@ import { report } from './report';
 import { medicalAgentReport } from './medical-agent-report';
 import { surgeryReport } from './surgery-report';
 import { vlmReport } from './vlm-report';
+import { monthlyReports } from './monthly-reports';
 import {
   buildCatalogPapers
 } from './report-catalog-core';
@@ -62,10 +63,28 @@ export const domainCategoryOptions = reportDomains.flatMap((domain) =>
   }))
 );
 
-export const catalogPapers: CatalogPaper[] = buildCatalogPapers(reportDomains);
+const monthlyDomains: ReportDomain[] = monthlyReports.map((entry) => ({
+  ...reportDomainMap.get(entry.domainId)!,
+  reportPath: `monthly/${entry.period}/${entry.domainId}/`,
+  report: entry.report
+}));
+
+export const searchDomains: ReportDomain[] = reportDomains.map((domain) => ({
+  ...domain,
+  report: {
+    ...domain.report,
+    categories: [...new Map([domain, ...monthlyDomains.filter((entry) => entry.id === domain.id)]
+      .flatMap((entry) => entry.report.categories).map((category) => [category.id, category])).values()]
+  }
+}));
+
+export const catalogPapers: CatalogPaper[] = buildCatalogPapers([...reportDomains, ...monthlyDomains]);
+
+export const latestReportDate = [...reportDomains.map((domain) => domain.report), ...monthlyReports.map((entry) => entry.report)]
+  .map((report) => report.meta.retrievalDate).sort().at(-1) ?? '';
 
 export const catalogStats = {
-  sourceRecords: reportDomains.reduce((total, domain) => total + domain.report.papers.length, 0),
+  sourceRecords: [...reportDomains, ...monthlyDomains].reduce((total, domain) => total + domain.report.papers.length, 0),
   uniqueRecords: catalogPapers.length,
   domains: reportDomains.length
 };

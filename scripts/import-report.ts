@@ -1,6 +1,7 @@
 import { copyFileSync, mkdirSync, readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
-import { parseReport } from '../src/lib/report-parser';
+import { buildSourceReport } from '../src/lib/source-report-parser';
+import { parseReport, type ReportData } from '../src/lib/report-parser';
 import { validateMonthlyReport } from './monthly-report-validation';
 import { validateParsedReport } from './report-validation';
 
@@ -17,10 +18,15 @@ if (!inputPath) {
 
 const sourcePath = resolve(inputPath);
 const markdown = readFileSync(sourcePath, 'utf8');
-const parsed = parseReport(markdown);
-const errors = monthly
-  ? validateMonthlyReport({ ...parsed, html: '' }, period ?? '', domain ?? '')
-  : validateParsedReport(parsed);
+let parsed: ReportData | ReturnType<typeof parseReport>;
+let errors: string[];
+if (monthly) {
+  parsed = buildSourceReport(markdown, true);
+  errors = validateMonthlyReport(parsed, period ?? '', domain ?? '');
+} else {
+  parsed = parseReport(markdown);
+  errors = validateParsedReport(parsed);
+}
 
 if (errors.length > 0) {
   console.error(`Import stopped; source report failed validation: ${sourcePath}`);
