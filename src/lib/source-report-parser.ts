@@ -107,8 +107,8 @@ export function buildSourceReport(markdown: string, monthly = false): ReportData
   // Preserve source anchors used by the report's tables and reading links.
   for (let index = 0; index < nodes.length; index++) {
     const node = nodes[index];
-    if (node.type !== 'html') continue;
-    const anchor = node.value.match(/^<a id="([^"]+)"\s*><\/a>$/);
+    if (node.type !== 'html' && node.type !== 'paragraph') continue;
+    const anchor = (node.type === 'html' ? node.value : toString(node)).match(/^<a id="([^"]+)"\s*><\/a>$/);
     if (!anchor) continue;
     const nextHeading = nodes.slice(index + 1).find((item) => item.type === 'heading') as Heading | undefined;
     if (nextHeading && (nextHeading.data?.hProperties as any)?.id === anchor[1]) continue;

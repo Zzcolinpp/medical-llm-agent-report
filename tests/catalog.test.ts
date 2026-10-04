@@ -1,4 +1,6 @@
 import test from 'node:test';
+import { readFileSync } from 'node:fs';
+import { buildSourceReport } from '../src/lib/source-report-parser';
 import assert from 'node:assert/strict';
 import { catalogDomains } from '../scripts/catalog-input';
 import { validateCatalog } from '../scripts/catalog-validation';
@@ -38,4 +40,13 @@ test('de-duplicates annual and monthly records while preserving report membershi
   const papers = buildCatalogPapers([...catalogDomains, ...monthlyDomains]);
   assert.equal(new Set(papers.map((paper) => paper.key)).size, papers.length);
   assert.ok(papers.some((paper) => paper.memberships.some((membership) => membership.reportPath.startsWith('monthly/')) && paper.memberships.some((membership) => !membership.reportPath.startsWith('monthly/'))));
+});
+
+test('preserves supplemental report reading anchors', () => {
+  for (const slug of ['lung-cancer', 'prospective-llm-agent', 'medical-agent-increment']) {
+    const report = buildSourceReport(readFileSync(`src/content/supplemental/${slug}.md`, 'utf8'));
+    for (const [, id] of report.html.matchAll(/href="#([^"\s]+)"/g)) {
+      assert.ok(report.html.includes(`id="${id}"`), `${slug}: missing anchor ${id}`);
+    }
+  }
 });
