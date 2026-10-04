@@ -2,6 +2,8 @@
 import { BookOpen, Search } from 'lucide-astro';
 import '../styles/global.css';
 import '../styles/portal.css';
+import '../styles/cards.css';
+import library from '../generated/card-library.json';
 
 interface Props {
   title: string;
@@ -18,7 +20,7 @@ const {
   description = '按疾病与诊疗、数字医学与 AI 组织的医学研究报告门户。',
   active = 'home',
   reportLabel = '医学前沿追踪',
-  reportDate = '2026-07-17',
+  reportDate = library.batches.map(b=>b.date).sort().at(-1),
   brandKicker: _brandKicker,
   brandSubline: _brandSubline
 } = Astro.props;
@@ -52,8 +54,8 @@ const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site).toString(
           <a class:list={['nav-link', { active: active === 'home' }]} href={base}>
             <span>总览</span>
           </a>
-          <a class:list={['nav-link', { active: active === 'topics' || ['vlm', 'surgery', 'medical-agent'].includes(active) }]} href={`${base}topics/`}><span>医学主题</span></a>
-          <a class:list={['nav-link', { active: active === 'library' || annualActive || active === 'monthly' }]} href={`${base}library/`}><BookOpen size={16} aria-hidden="true" /><span>报告库</span></a>
+          <a class:list={['nav-link', { active: active === 'topics' || ['vlm', 'surgery', 'medical-agent'].includes(active) }]} href={`${base}topics/`}><span>医学专题</span></a>
+          <a class:list={['nav-link', { active: active === 'library' || annualActive || active === 'monthly' }]} href={`${base}library/`}><BookOpen size={16} aria-hidden="true" /><span>文献库</span></a>
           <a class:list={['nav-link', { active: searchActive }]} href={`${base}search/`}>
             <Search size={16} strokeWidth={1.8} aria-hidden="true" />
             <span>文献检索</span>

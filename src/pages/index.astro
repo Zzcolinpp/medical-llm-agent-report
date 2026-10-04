@@ -1,18 +1,5 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import ReportLibrary from '../components/ReportLibrary.astro';
-import { medicalTopics, reportLibrary, libraryDate, reportKinds } from '../lib/report-library';
-const base = import.meta.env.BASE_URL;
+import CardWorkbench from '../components/CardWorkbench.astro';
 ---
-<Layout title="医学前沿追踪" description="按疾病与诊疗、数字医学与 AI 组织的医学研究报告门户。" active="home" reportDate={libraryDate}>
-  <section class="portal-intro"><div class="container portal-intro__grid">
-    <div><p class="eyebrow">MEDICAL FRONTIERS / RESEARCH TRACKER</p><h1>医学前沿追踪</h1><p>从疾病诊疗到数字医学，沿着临床问题阅读前沿证据。</p>
-    <form class="portal-search" action={`${base}library/`}><label class="sr-only" for="report-search">查找报告</label><input id="report-search" name="q" placeholder="搜索医学主题、报告或追踪窗口" /><button>查找报告 →</button></form></div>
-    <div class="portal-summary"><span>报告检索截至</span><strong>{libraryDate.replaceAll('-', '.')}</strong><p>{reportLibrary.length} 份报告 · {medicalTopics.length} 个医学主题</p><a href={`${base}library/`}>浏览完整报告库 ↗</a></div>
-  </div></section>
-  <nav class="container report-kind-nav" aria-label="报告分类">{reportKinds.map(kind => <a href={`${base}library/?kind=${encodeURIComponent(kind)}`}><strong>{kind}</strong><span>{reportLibrary.filter(r => r.kind === kind).length} 份报告</span></a>)}</nav><div class="container portal-body">
-    <section class="portal-main"><div class="portal-heading"><div><p class="eyebrow">LATEST REPORTS</p><h2>最新报告</h2></div><a href={`${base}library/`}>全部报告 ↗</a></div><p class="portal-note">按报告检索截止日期排序；具体窗口与完成状态见报告全文。</p><ReportLibrary compact />
-    <div class="portal-bottom"><strong>从问题走向原始文献</strong><p>在报告中梳理研究脉络，在文献索引中查找数字医学与 AI 论文。</p><a class="button button--secondary" href={`${base}search/`}>进入文献检索 ↗</a></div></section>
-    <aside class="portal-topics"><p class="eyebrow">EXPLORE BY TOPIC</p><h2>医学主题</h2>{['疾病与诊疗', '数字医学与 AI'].map(group => <section class="topic-group"><h3>{group}</h3>{medicalTopics.filter(t => t.group === group).map(t => <a class="topic-entry" href={`${base}library/?topic=${t.id}`}><strong>{t.label} <span>↗</span></strong><p>{t.description}</p><small>{reportLibrary.filter(r => r.topic === t.id).length} 份报告</small></a>)}</section>)}<a class="text-link" href={`${base}topics/`}>查看主题地图 →</a></aside>
-  </div>
-</Layout>
+<Layout title="医学前沿追踪 · 文献库" active="home"><section class="container card-page"><CardWorkbench mode="home" title="医学前沿文献库" /></section></Layout>

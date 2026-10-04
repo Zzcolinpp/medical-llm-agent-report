@@ -1,6 +1,5 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import { medicalTopics, reportLibrary, libraryDate } from '../lib/report-library';
-const base = import.meta.env.BASE_URL;
+import CardWorkbench from '../components/CardWorkbench.astro';
 ---
-<Layout title="医学主题 · 医学前沿追踪" active="topics" reportDate={libraryDate}><section class="container portal-page"><p class="eyebrow">MEDICAL TOPICS</p><h1>沿着医学主题探索</h1><p class="portal-lede">以疾病与诊疗问题为起点，连接数字医学与 AI 的方法和临床应用。</p>{['疾病与诊疗', '数字医学与 AI'].map(group => <section class="topic-map-group"><h2>{group}</h2><div class="topic-map-grid">{medicalTopics.filter(t => t.group === group).map(t => <article class="topic-map-card"><h3>{t.label}</h3><p>{t.description}</p><a href={`${base}library/?topic=${t.id}`}>查看 {reportLibrary.filter(r => r.topic === t.id).length} 份报告 →</a></article>)}</div></section>)}</section></Layout>
+<Layout title="医学专题 · 医学前沿追踪" active="topics"><section class="container card-page"><CardWorkbench mode="topics" title="医学专题" /></section></Layout>

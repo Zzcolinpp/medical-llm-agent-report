@@ -1,0 +1,6 @@
+---
+import Layout from '../layouts/Layout.astro';
+import ReportLibrary from '../components/ReportLibrary.astro';
+import { libraryDate } from '../lib/report-library';
+---
+<Layout title="原始报告备份 · 医学前沿追踪" active="report" reportDate={libraryDate}><section class="container portal-page"><p class="eyebrow">SOURCE ARCHIVE</p><h1>原始报告备份</h1><p class="portal-lede">保留报告全文、追踪窗口与原始证据状态。卡片的修订与笔记独立保存。</p><ReportLibrary /></section></Layout>

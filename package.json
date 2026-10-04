@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build",
+    "build": "tsx scripts/build-card-library.ts && astro build && node scripts/build-worker.mjs",
     "preview": "astro preview",
     "check": "astro check",
     "test": "tsx --test tests/*.test.ts",
@@ -15,7 +15,9 @@
     "validate:vlm": "tsx scripts/validate-vlm-report.ts",
     "validate:surgery": "tsx scripts/validate-surgery-report.ts",
     "validate:medical-agent": "tsx scripts/validate-medical-agent-report.ts",
-    "report:import": "tsx scripts/import-report.ts"
+    "report:import": "tsx scripts/import-report.ts",
+    "cards:import": "tsx scripts/build-card-library.ts",
+    "preview:cards": "node scripts/local-card-server.mjs"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.4",
@@ -33,6 +35,8 @@
     "@types/mdast": "^4.0.4",
     "@types/node": "^22.10.0",
     "tsx": "^4.19.2",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.2",
+    "drizzle-kit": "0.31.11",
+    "drizzle-orm": "0.45.3"
   }
 }

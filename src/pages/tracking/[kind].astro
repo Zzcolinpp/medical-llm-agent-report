@@ -1,0 +1,7 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import CardWorkbench from '../../components/CardWorkbench.astro';
+export function getStaticPaths(){return [['annual','年度追踪'],['monthly','月度追踪'],['selection','专题摘选'],['author','作者追踪']].map(([kind,title])=>({params:{kind},props:{kind,title}}));}
+const {kind,title}=Astro.props;
+---
+<Layout title={`${title} · 医学前沿追踪`} active="library"><section class="container card-page">{kind==='author'?<><div class="workspace-heading"><h1>作者追踪</h1><a class="backup-link" href="../../backups/">原始报告备份</a></div><div class="empty-cards">尚未建立作者追踪内容。</div></>:<CardWorkbench mode="tracking" kind={kind} title={title} />}</section></Layout>

@@ -1,33 +1,5 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import GlobalLiteratureExplorer from '../components/GlobalLiteratureExplorer.astro';
-import { catalogPapers, catalogStats, reportDomains, searchDomains, latestReportDate } from '../lib/report-catalog';
-
-const base = import.meta.env.BASE_URL;
-const domainCounts = reportDomains.map((domain) => ({ label: domain.label, count: catalogPapers.filter((paper) => paper.memberships.some((membership) => membership.domainId === domain.id)).length }));
+import CardWorkbench from '../components/CardWorkbench.astro';
 ---
-
-<Layout
-  title="文献检索 · 医学前沿追踪"
-  description="跨医学视觉与基础模型、手术与围手术期 AI、医疗 LLM / Agent 三大领域检索前沿文献。"
-  reportDate={latestReportDate}
-  active="search"
->
-  <section class="page-intro-band">
-    <div class="container page-intro">
-      <div>
-        <p class="eyebrow">GLOBAL LITERATURE INDEX · {catalogStats.uniqueRecords} UNIQUE RECORDS</p>
-        <h1>数字医学与 AI 文献检索</h1>
-        <p>跨三大领域按关键词、期刊、二级分类、范围、年月和文章类型定位论文，再返回对应年度或月度报告的原文上下文。疾病与诊疗全文请在<a href={`${base}library/?topic=lung-cancer`}>报告库</a>查找。</p>
-      </div>
-      <div class="page-intro__stats">
-        {domainCounts.map((item) => <span><strong>{item.count}</strong>{item.label}</span>)}
-      </div>
-    </div>
-  </section>
-  <section class="section-band section-band--compact">
-    <div class="container">
-      <GlobalLiteratureExplorer papers={catalogPapers} domains={searchDomains} base={base} />
-    </div>
-  </section>
-</Layout>
+<Layout title="文献检索 · 医学前沿追踪" active="search"><section class="container card-page"><CardWorkbench title="文献检索" /></section></Layout>

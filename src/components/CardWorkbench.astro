@@ -1,0 +1,25 @@
+---
+import library from '../generated/card-library.json';
+const { mode='library', topic='', kind='', period='', title='文献库' } = Astro.props;
+const base=import.meta.env.BASE_URL;
+const initialPapers=library.papers.filter(p=>(!topic||p.topics.includes(topic))&&p.sources.some(s=>library.batches.some(b=>b.id===s.batch&&(!kind||b.kind===kind)&&(!period||b.id.startsWith('monthly-'+period+'-'))))).slice(0,2);
+const kinds=[['annual','年度追踪'],['monthly','月度追踪'],['selection','专题摘选'],['author','作者追踪']];
+---
+<div class="card-workbench" data-workbench data-mode={mode} data-topic={topic} data-kind={kind} data-period={period}>
+ <section class="workspace-heading"><div><p class="eyebrow">MEDICAL FRONTIERS / LITERATURE LIBRARY</p><h1>{title}</h1></div><a class="backup-link" href={`${base}backups/`}>原始报告备份</a></section>
+ <form class="card-search"><label class="sr-only" for="library-query">检索文献</label><input id="library-query" name="q" type="search" placeholder="标题、DOI、PMID、摘要、标签或笔记" /><button type="submit">检索文献</button></form>
+ {mode==='home' && <nav class="tracking-nav" aria-label="追踪板块">{kinds.map(([id,label])=><a href={`${base}tracking/${id}/`}><strong>{label}</strong><span>{id==='author'?'尚未建立':`${new Set(library.papers.filter(p=>p.sources.some(s=>library.batches.some(b=>b.id===s.batch&&b.kind===id))).map(p=>p.id)).size} 篇文献`}</span></a>)}</nav>}
+ <p class="workspace-status" role="status">{library.papers.length} 篇文献 · 正在读取编辑状态…</p>
+ <button class="retry-library" type="button" hidden>重新读取</button>
+ {(mode==='home'||mode==='topics') && <section class="home-topics"><div class="workspace-section-title"><h2>医学专题</h2><a href={`${base}topics/`}>全部专题</a></div><div data-home-topics class="medical-topic-grid">{library.topics.map(t=><a class="medical-topic-card" href={`${base}topics/${t.id}/`}><span>{t.group}</span><h3>{t.label}</h3><p>{t.description}</p><strong>{library.papers.filter(p=>p.topics.includes(t.id)).length} 篇</strong><div class="topic-storage-bar"><i style={`width:${library.papers.filter(p=>p.topics.includes(t.id)).length/library.papers.length*100}%`}></i></div></a>)}</div></section>}
+ {mode==='tracking' && <section class="batch-panel"><h2>追踪批次与医学专题</h2><div data-batches class="batch-list"></div></section>}
+ <section class="library-surface" hidden={mode==='topics'}>
+ <div class="card-filters"><label>医学主题<select name="topic"><option value="">全部主题</option>{library.topics.map(t=><option value={t.id}>{t.label}</option>)}</select></label><label>追踪批次<select name="batch"><option value="">全部批次</option></select></label><label>阅读状态<select name="reading"><option value="">全部状态</option><option>未读</option><option>阅读中</option><option>已读</option></select></label><label>证据状态<select name="verification"><option value="">全部记录</option><option value="included">来源已收录</option><option value="pending">含待核验记录</option></select></label><label>发表年份<select name="year"><option value="">全部年份</option></select></label><label>排序<select name="sort"><option value="date">发表日期倒序</option><option value="title">标题</option><option value="updated">最近编辑</option></select></label></div>
+ <div class="distribution-panel"><div class="workspace-section-title"><h2>文献分布</h2><div class="distribution-switch" role="group" aria-label="分布方式"><button type="button" data-distribution="category" aria-pressed="true">按专题分布</button><button type="button" data-distribution="journal" aria-pressed="false">按期刊分布</button></div></div><p class="distribution-caption">图表按文献卡片去重；一篇文献可属于多个专题。点击分布条目筛选下方文献。</p><div data-chart class="distribution-bars"></div><div class="chart-actions"><button type="button" data-chart-more hidden>展开全部分布</button><button type="button" data-chart-reset hidden>清除图表筛选</button><span data-chart-selection></span></div></div>
+ <div class="workspace-section-title"><h2>文献卡片</h2><p data-result-count></p></div><div data-paper-list class="literature-cards">{initialPapers.map(p=><article class="literature-card"><div class="literature-card__meta">{p.journal} · {p.date}</div><h3><button type="button" data-open={p.id}>{p.titleZh||p.titleEn}</button></h3><p class="literature-card__summary">{p.summary||'原报告仅提供题录。'}</p></article>)}</div><div class="card-pagination"><button type="button" data-prev>上一页</button><span data-page></span><button type="button" data-next>下一页</button></div>
+ </section>
+ <dialog class="card-dialog" aria-labelledby="detail-title"><div class="dialog-toolbar"><span>文献卡片</span><button type="button" data-close aria-label="关闭文献卡片">关闭</button></div><div data-detail></div></dialog>
+</div>
+<script>
+ import '../scripts/card-workbench';
+</script>
