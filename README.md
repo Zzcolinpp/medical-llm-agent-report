@@ -59,3 +59,14 @@ pnpm build
 保持既有 Sites 项目与访问范围，使用 Sites 标准保存、打包和发布流程。构建生成 `dist/server/index.js`，包含报告静态页面和 D1 卡片 API；`.openai/hosting.json` 声明 `DB` 绑定。`db/schema.ts` 定义修订表，Drizzle 的 `drizzle/*.sql` 及 `drizzle/meta/` 随版本保存并由平台部署前应用。迁移只修改结构，不导入题录，也不在请求中创建表。
 
 已发布的迁移不得改写；后续结构变化应生成新的迁移并检查 SQL。共享源卡片、原始报告和独立修订层的关系应在更新时保持。
+
+## GitHub Pages 阅读版
+
+GitHub Pages 使用同一份页面与报告，提供完整卡片、检索、专题／期刊索引、翻页及原始报告备份。编辑入口跳转到现有 Sites 在线版；GitHub Pages 不托管写入 API，也不自动复制 D1 中的个人笔记与在线修订。
+
+```bash
+PUBLIC_BASE_PATH=/medical-llm-agent-report SITE_URL=https://zzcolinpp.github.io pnpm build:pages
+pnpm preview
+```
+
+`build:pages` 导出报告基础卡片（含每条来源的说明），不打包 Worker、数据库迁移或绑定配置。推送 `main` 后，GitHub Actions 验证、构建并发布到 <https://zzcolinpp.github.io/medical-llm-agent-report/>。Sites 仍使用原来的 `build` 与部署流程。

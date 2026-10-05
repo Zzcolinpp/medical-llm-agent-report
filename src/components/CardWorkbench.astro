@@ -2,14 +2,16 @@
 import library from '../generated/card-library.json';
 const { mode='library', topic='', kind='', period='', title='文献库', description=''  } = Astro.props;
 const base=import.meta.env.BASE_URL;
+const staticMode=import.meta.env.PUBLIC_LIBRARY_MODE==='static';
 const initialPapers=library.papers.filter(p=>(!topic||p.topics.includes(topic))&&p.sources.some(s=>library.batches.some(b=>b.id===s.batch&&(!kind||b.kind===kind)&&(!period||b.id.startsWith('monthly-'+period+'-'))))).slice(0,2);
 const kinds=[['annual','年度追踪'],['monthly','月度追踪'],['selection','专题摘选'],['author','作者追踪']];
 ---
-<div class="card-workbench" data-workbench data-mode={mode} data-topic={topic} data-kind={kind} data-period={period}>
+<div class="card-workbench" data-workbench data-library-mode={staticMode?'static':'live'} data-mode={mode} data-topic={topic} data-kind={kind} data-period={period}>
  <section class="workspace-heading"><div><p class="eyebrow">MEDICAL FRONTIERS / LITERATURE LIBRARY</p><h1>{title}</h1>{description && <p class="reader-description">{description}</p>}</div><a class="backup-link" href={`${base}backups/`}>原始报告备份</a></section>
  <form class="card-search"><label class="sr-only" for="library-query">检索文献</label><input id="library-query" name="q" type="search" placeholder="标题、DOI、PMID、摘要、标签或笔记" /><button type="submit" disabled>检索文献</button></form>
  {mode==='home' && <nav class="tracking-nav" aria-label="追踪板块">{kinds.map(([id,label])=><a href={`${base}tracking/${id}/`}><strong>{label}</strong><span>{id==='author'?'尚未建立':`${new Set(library.papers.filter(p=>p.sources.some(s=>library.batches.some(b=>b.id===s.batch&&b.kind===id))).map(p=>p.id)).size} 篇文献`}</span></a>)}</nav>}
- <p class="workspace-status" role="status">{library.papers.length} 篇文献 · 正在读取编辑状态…</p>
+ <p class="workspace-status" role="status">{library.papers.length} 篇文献 · 正在读取文献库…</p>
+ {staticMode && <p class="static-library-notice">此页为报告文献阅读版。<a href="https://medical-ai-literature-reports.ziyangzhong014.chatgpt.site/library/" target="_blank" rel="noreferrer">前往在线版编辑卡片与笔记</a>，在线修订不会自动同步到此页。</p>}
  <button class="retry-library" type="button" hidden>重新读取</button>
  {(mode==='home'||mode==='topics') && <section class="home-topics"><div class="workspace-section-title"><h2>医学专题</h2><a href={`${base}topics/`}>全部专题</a></div><div data-home-topics class="medical-topic-grid">{library.topics.map(t=><a class="medical-topic-card" href={`${base}topics/${t.id}/`}><span>{t.group}</span><h3>{t.label}</h3><p>{t.description}</p><strong>{library.papers.filter(p=>p.topics.includes(t.id)).length} 篇</strong><div class="topic-storage-bar"><i style={`width:${library.papers.filter(p=>p.topics.includes(t.id)).length/library.papers.length*100}%`}></i></div></a>)}</div></section>}
  {mode==='tracking' && <section class="batch-panel"><h2>追踪批次与医学专题</h2><div data-batches class="batch-list"></div></section>}

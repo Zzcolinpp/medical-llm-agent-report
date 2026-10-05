@@ -7,6 +7,8 @@ if(root) {
  const el=<T extends HTMLElement>(s:string)=>root.querySelector<T>(s)!;
  const esc=(v:unknown)=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]!));
  const base=document.body.dataset.base||'/';
+ const staticMode=root.dataset.libraryMode==='static';
+ const onlineCard=(id:string)=>'https://medical-ai-literature-reports.ziyangzhong014.chatgpt.site/library/?card='+encodeURIComponent(id);
  const status=el<HTMLElement>('.workspace-status'), retry=el<HTMLButtonElement>('.retry-library');
  const query=el<HTMLInputElement>('[name=q]'), topic=el<HTMLSelectElement>('[name=topic]'), batch=el<HTMLSelectElement>('[name=batch]');
  const reading=el<HTMLSelectElement>('[name=reading]'), verification=el<HTMLSelectElement>('[name=verification]'), year=el<HTMLSelectElement>('[name=year]'), sort=el<HTMLSelectElement>('[name=sort]');
@@ -32,9 +34,9 @@ if(root) {
  async function load(){
   status.textContent='正在读取文献库…';retry.hidden=true;
   try {
-   data=await request<Library>('api/library');
+   data=await request<Library>(staticMode?'data/card-library.json':'api/library');
    const scope=data.papers.filter(p=>inScope(p)&&(!root!.dataset.topic||p.topics.includes(root!.dataset.topic)));
-   status.textContent=`${scope.length.toLocaleString('zh-CN')} 篇文献 · ${new Set(scope.flatMap(p=>p.sources.filter(s=>data.batches.some(b=>b.id===s.batch&&(!kind||b.kind===kind))).map(s=>s.batch))).size} 份报告来源 · 笔记与修订同步保存`;
+   status.textContent=`${scope.length.toLocaleString('zh-CN')} 篇文献 · ${new Set(scope.flatMap(p=>p.sources.filter(s=>data.batches.some(b=>b.id===s.batch&&(!kind||b.kind===kind))).map(s=>s.batch))).size} 份报告来源 · ${staticMode?'报告文献阅读版':'笔记与修订同步保存'}`;
    const scopedBatches=data.batches.filter(b=>(!kind||b.kind===kind)&&(!root!.dataset.period||b.id.startsWith('monthly-'+root!.dataset.period+'-'))&&(!root!.dataset.topic||data.papers.some(p=>p.topics.includes(root!.dataset.topic!)&&p.sources.some(s=>s.batch===b.id))));
    batch.innerHTML=option('','全部批次')+scopedBatches.map(b=>option(b.id,b.title)).join('');batch.value=params.get('batch')||params.get('report')?.replace(/^\/|\/$/g,'').replaceAll('/','-')||'';
    year.innerHTML=option('','全部年份')+[...new Set(data.papers.map(p=>p.date.slice(0,4)).filter(Boolean))].sort().reverse().map(y=>option(y,y)).join('');
@@ -73,7 +75,7 @@ if(root) {
  function cardHtml(p:Card,index:number){
   const sources=[...new Map(p.sources.map(source=>[source.batch,source])).values()];
   return `<article class="literature-card" id="${p.id}" aria-labelledby="title-${p.id}">
-   <header class="paper-row-header"><div class="literature-card__meta"><span class="paper-number">${String(index+1).padStart(2,'0')}</span><span>${esc(p.journal||'期刊未注明')}</span><span>${esc(p.date||'日期未注明')}</span>${p.articleType?`<span>${esc(p.articleType)}</span>`:''}</div><button type="button" class="paper-edit" data-card-edit="${p.id}">编辑卡片</button></header>
+   <header class="paper-row-header"><div class="literature-card__meta"><span class="paper-number">${String(index+1).padStart(2,'0')}</span><span>${esc(p.journal||'期刊未注明')}</span><span>${esc(p.date||'日期未注明')}</span>${p.articleType?`<span>${esc(p.articleType)}</span>`:''}</div>${staticMode?`<a class="paper-edit" href="${esc(onlineCard(p.id))}" target="_blank" rel="noreferrer">在在线版编辑</a>`:`<button type="button" class="paper-edit" data-card-edit="${p.id}">编辑卡片</button>`}</header>
    <h3 id="title-${p.id}">${esc(p.titleZh||p.titleEn)}</h3>
    ${p.titleZh&&p.titleEn?`<p class="literature-card__english">${esc(p.titleEn)}</p>`:''}
    <div class="paper-identifiers">${p.doi?`<a href="https://doi.org/${esc(p.doi)}" target="_blank" rel="noreferrer">DOI：${esc(p.doi)}</a>`:''}${p.pmid?`<a href="https://pubmed.ncbi.nlm.nih.gov/${esc(p.pmid)}/" target="_blank" rel="noreferrer">PMID：${esc(p.pmid)}</a>`:''}</div>
@@ -134,11 +136,15 @@ if(root) {
   updateTopicCounts();
  }
  function showDetail(p:Detail){
-  el<HTMLElement>('[data-detail]').innerHTML=`<div class="card-detail-body"><h2 id="detail-title">${esc(p.titleZh||p.titleEn)}</h2><p class="detail-english">${esc(p.titleEn)}</p><div class="detail-metadata"><span>${esc(p.journal||'期刊未注明')}</span><span>${esc(p.date||'日期未注明')}</span><span>${esc(p.readingStatus)}</span><span>${esc(p.verification)}</span>${p.doi?`<a href="https://doi.org/${esc(p.doi)}" target="_blank" rel="noreferrer">DOI ${esc(p.doi)}</a>`:''}${p.pmid?`<a href="https://pubmed.ncbi.nlm.nih.gov/${esc(p.pmid)}/" target="_blank" rel="noreferrer">PMID ${esc(p.pmid)}</a>`:''}</div><div class="detail-actions"><button type="button" data-edit>编辑卡片</button><button type="button" data-link>复制卡片链接</button></div><div class="literature-card__tags">${p.categories.map(c=>`<span class="card-tag">${esc(c)}</span>`).join('')}${p.tags.map(t=>`<span class="card-tag">${esc(t)}</span>`).join('')}</div><h3 class="detail-section-title">摘要与证据说明</h3><p class="detail-summary">${esc(p.summary||'原报告未提供摘要说明。')}</p><h3 class="detail-section-title">我的笔记</h3><p class="detail-note">${esc(p.notes||'尚未添加笔记。')}</p>${Object.keys(p.customFields).length?`<h3 class="detail-section-title">补充信息</h3>${Object.entries(p.customFields).map(([k,v])=>`<h4>${esc(k)}</h4><p class="detail-note">${esc(v)}</p>`).join('')}`:''}<h3 class="detail-section-title">原始来源 · ${new Set(p.sources.map(s=>s.batch)).size} 份报告</h3>${p.sources.map(s=>`<details class="source-record"><summary>${esc(s.title)} · ${esc(s.category)} · ${esc(s.verification)}</summary><p>${esc(s.summary||'原来源仅提供题录。')}</p><a href="${esc(base+s.href.slice(1))}">阅读报告备份</a></details>`).join('')}<details class="source-record"><summary>查看导入时的基础信息</summary><p>中文标题：${esc(p.original.titleZh)}\n英文标题：${esc(p.original.titleEn)}\n期刊：${esc(p.original.journal)}\n日期：${esc(p.original.date)}\nDOI：${esc(p.original.doi)}\nPMID：${esc(p.original.pmid)}</p></details>${p.updatedAt?`<p class="workspace-status">最近保存：${esc(new Date(p.updatedAt).toLocaleString('zh-CN'))}</p>`:''}</div>`;
+  el<HTMLElement>('[data-detail]').innerHTML=`<div class="card-detail-body"><h2 id="detail-title">${esc(p.titleZh||p.titleEn)}</h2><p class="detail-english">${esc(p.titleEn)}</p><div class="detail-metadata"><span>${esc(p.journal||'期刊未注明')}</span><span>${esc(p.date||'日期未注明')}</span><span>${esc(p.readingStatus)}</span><span>${esc(p.verification)}</span>${p.doi?`<a href="https://doi.org/${esc(p.doi)}" target="_blank" rel="noreferrer">DOI ${esc(p.doi)}</a>`:''}${p.pmid?`<a href="https://pubmed.ncbi.nlm.nih.gov/${esc(p.pmid)}/" target="_blank" rel="noreferrer">PMID ${esc(p.pmid)}</a>`:''}</div><div class="detail-actions">${staticMode?`<a href="${esc(onlineCard(p.id))}" target="_blank" rel="noreferrer">在在线版编辑</a>`:'<button type="button" data-edit>编辑卡片</button>'}<button type="button" data-link>复制卡片链接</button></div><div class="literature-card__tags">${p.categories.map(c=>`<span class="card-tag">${esc(c)}</span>`).join('')}${p.tags.map(t=>`<span class="card-tag">${esc(t)}</span>`).join('')}</div><h3 class="detail-section-title">摘要与证据说明</h3><p class="detail-summary">${esc(p.summary||'原报告未提供摘要说明。')}</p><h3 class="detail-section-title">我的笔记</h3><p class="detail-note">${esc(p.notes||'尚未添加笔记。')}</p>${Object.keys(p.customFields).length?`<h3 class="detail-section-title">补充信息</h3>${Object.entries(p.customFields).map(([k,v])=>`<h4>${esc(k)}</h4><p class="detail-note">${esc(v)}</p>`).join('')}`:''}<h3 class="detail-section-title">原始来源 · ${new Set(p.sources.map(s=>s.batch)).size} 份报告</h3>${p.sources.map(s=>`<details class="source-record"><summary>${esc(s.title)} · ${esc(s.category)} · ${esc(s.verification)}</summary><p>${esc(s.summary||'原来源仅提供题录。')}</p><a href="${esc(base+s.href.slice(1))}">阅读报告备份</a></details>`).join('')}<details class="source-record"><summary>查看导入时的基础信息</summary><p>中文标题：${esc(p.original.titleZh)}\n英文标题：${esc(p.original.titleEn)}\n期刊：${esc(p.original.journal)}\n日期：${esc(p.original.date)}\nDOI：${esc(p.original.doi)}\nPMID：${esc(p.original.pmid)}</p></details>${p.updatedAt?`<p class="workspace-status">最近保存：${esc(new Date(p.updatedAt).toLocaleString('zh-CN'))}</p>`:''}</div>`;
  }
  async function openCard(id:string,editing=false){
   dialog.showModal();el<HTMLElement>('[data-detail]').innerHTML='<div class="card-detail-body"><h2 id="detail-title">正在读取卡片…</h2></div>';
-  try{selectedCard=await request<Detail>('api/cards/'+id);if(editing)editCard();else showDetail(selectedCard);}catch(e){el<HTMLElement>('[data-detail]').innerHTML=`<div class="card-detail-body"><h2 id="detail-title">无法读取卡片</h2><p>${esc(e instanceof Error?e.message:'请重试。')}</p></div>`;}
+  try{
+   if(staticMode){const paper=data.papers.find(p=>p.id===id);if(!paper)throw new Error('未找到这篇文献。');selectedCard={...paper,original:paper};}
+   else selectedCard=await request<Detail>('api/cards/'+id);
+   if(editing&&!staticMode)editCard();else showDetail(selectedCard);
+  }catch(e){el<HTMLElement>('[data-detail]').innerHTML=`<div class="card-detail-body"><h2 id="detail-title">无法读取卡片</h2><p>${esc(e instanceof Error?e.message:'请重试。')}</p></div>`;}
  }
  function customRow(key='',value=''){return `<div class="custom-field-row"><input aria-label="自定义字段名称" placeholder="字段名称" value="${esc(key)}" /><input aria-label="自定义字段内容" placeholder="补充信息" value="${esc(value)}" /><button type="button" data-remove-custom>移除</button></div>`;}
  function editCard(){

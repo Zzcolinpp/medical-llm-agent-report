@@ -17,7 +17,8 @@
     "validate:medical-agent": "tsx scripts/validate-medical-agent-report.ts",
     "report:import": "tsx scripts/import-report.ts",
     "cards:import": "tsx scripts/build-card-library.ts",
-    "preview:cards": "node scripts/local-card-server.mjs"
+    "preview:cards": "node scripts/local-card-server.mjs",
+    "build:pages": "tsx scripts/build-card-library.ts && PUBLIC_LIBRARY_MODE=static astro build && node scripts/build-pages-data.mjs"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.4",
